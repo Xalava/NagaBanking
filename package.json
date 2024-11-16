@@ -1,0 +1,20 @@
+{
+  "name": "nagabanking",
+  "version": "1.0.0",
+  "description": "Naga Banking is a suite facilitating bank operations when interacting with tokenized assets.",
+  "main": "hardhat.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "hardhat": "^2.22.15"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.7",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "ethers": "6.13.4"
+  }
+}

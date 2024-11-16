@@ -1,0 +1,38 @@
+.container {
+    padding-top: 2rem;
+}
+
+.hidden {
+    display: none;
+}
+
+.offer-card {
+    border: 1px solid #eee;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+}
+
+.nav-tabs {
+    margin-bottom: 2rem;
+}
+
+.offer-status {
+    float: right;
+    font-size: 0.8em;
+    color: #666;
+}
+
+#wallet-status {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    font-size: 0.8em;
+}
+
+#notification {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    color: #666
+}

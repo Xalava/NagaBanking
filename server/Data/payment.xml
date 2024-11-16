@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
+    <FIToFICstmrCdtTrf>
+        <!-- Group Header - Contains message metadata -->
+        <GrpHdr>
+            <MsgId>CRT12345</MsgId>
+            <CreDtTm>2024-11-16T15:00:00</CreDtTm>
+            <!-- Sending Bank (US) -->
+            <InstgAgt>
+                <FinInstnId>
+                    <BIC>ABCDUS11</BIC>
+                </FinInstnId>
+            </InstgAgt>
+            <!-- Receiving Bank (UK) -->
+            <InstdAgt>
+                <FinInstnId>
+                    <BIC>XYZLGB2L</BIC>
+                </FinInstnId>
+            </InstdAgt>
+        </GrpHdr>
+        
+        <!-- Credit Transfer Transaction Information -->
+        <CdtTrfTxInf>
+            <!-- Payment Identification -->
+            <PmtId>
+                <InstrId>1234567890</InstrId>
+                <EndToEndId>END1234567890</EndToEndId>
+            </PmtId>
+            
+            <!-- Payment Amount -->
+            <IntrBkSttlmAmt Ccy="USD">1000.00</IntrBkSttlmAmt>
+            <!-- Charges Bearer -->
+            <ChrgBr>SLEV</ChrgBr>
+            
+            <!-- Debtor (Sender) Information -->
+            <Dbtr>
+                <Nm>Alice</Nm>
+                <PstlAdr>
+                    <Ctry>US</Ctry>
+                </PstlAdr>
+                <Id>
+                    <OrgId>
+                        <BICOrBEI>ABCDUS11</BICOrBEI>
+                    </OrgId>
+                </Id>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <IBAN>US11345678901234567890</IBAN>
+                </Id>
+            </DbtrAcct>
+            
+            <!-- Creditor (Receiver) Information -->
+            <Cdtr>
+                <Nm>Bob</Nm>
+                <PstlAdr>
+                    <Ctry>GB</Ctry>
+                </PstlAdr>
+                <Id>
+                    <OrgId>
+                        <BICOrBEI>XYZLGB22</BICOrBEI>
+                    </OrgId>
+                </Id>
+            </Cdtr>
+            <CdtrAcct>
+                <Id>
+                    <IBAN>GB22876543210987654321</IBAN>
+                </Id>
+            </CdtrAcct>
+            
+            <!-- Remittance Information -->
+            <RmtInf>
+                <Ustrd>1</Ustrd>
+            </RmtInf>
+        </CdtTrfTxInf>
+    </FIToFICstmrCdtTrf>
+</Document>

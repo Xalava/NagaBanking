@@ -1,5 +1,7 @@
 # Naga Banking - Banking Software for Modern Banks 
 
+![Naga Banking](./frontend/naga-banking.png)
+
 ## Overview
 Naga Banking is a suite facilitating bank operations when interacting with tokenized assets.
 
@@ -38,13 +40,23 @@ Buyer triggher payments
 
 ### Smart Contracts
 - Dev Framework: Hardhat
-- Language: Solidity ^0.8.20
+- Language: Solidity ^0.8.26
 
 ### Bank Server
 - Runtime: Node.js
 - Database: Ayake
 
 ### Frontend
-- Framework: Vanilla TypeScript
+- Framework: Vanilla JavaScript
 - CSS Framework: Milligram.io
 - Web3 Library: ethers.js
+
+
+## Usage
+```sh
+npx hardhat compile
+npx hardhat node
+--
+npx hardhat ignition deploy ignition/modules/naga.js --network localhost
+liveserver frontend/ # or equivalent
+```

@@ -1,0 +1,20 @@
+node_modules
+.env
+
+dft.*
+
+# Hardhat files
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+
+/ignition/deployments
+
+package-lock.json
