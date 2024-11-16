@@ -1,6 +1,10 @@
 import { promises as pfs } from 'fs';
 import xml2js from 'xml2js';
 import { ethers } from 'ethers';
+import axios from "axios";
+import FormData from 'form-data';
+import fs from 'fs';
+
 // import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.8.1/ethers.min.js";
 
 import dotenv from 'dotenv';
@@ -76,9 +80,6 @@ async function triggerSmartContract(paymentInfo) {
 
 // AYAKE
 
-
-import axios from "axios";
-
 const API_BASE_URL = 'http://localhost:8000';
 
 async function apiRequest(method, endpoint, data = null) {
@@ -96,9 +97,6 @@ async function apiRequest(method, endpoint, data = null) {
 
 apiRequest('POST', '/buckets', { bucketName: 'nagaBanking' });
 
-import FormData from 'form-data';
-import fs from 'fs';
-
 
 async function uploadFile(bucketName, filePath) {
     const form = new FormData();
@@ -114,23 +112,55 @@ async function uploadFile(bucketName, filePath) {
     }
 }
 
-
 // EXECUTION
 
 async function execution() {
-    const paymentInfo = await extractPaymentInfo()
-    if (isPaymentValid(paymentInfo, '1000', 'USD', 'Alice', '1')) {
-        console.log(' 🥳 Payment is valid');
-        triggerSmartContract(paymentInfo)
-        uploadFile('nagaBanking', './Data/payment.xml');
+    try {
+        // Getting SWIFT data
+        const paymentInfo = await extractPaymentInfo();
+        if (!paymentInfo) {
+            throw new Error('Failed to extract payment information');
+        }
 
-    } else {
-        console.error('Missing in payment information');
+        // Getting offer data
+        const provider = new ethers.getDefaultProvider("http://localhost:8545/");
+        const contract = new ethers.Contract(NAGAEX_ADDRESS, NAGAEX_ABI, provider);
+        const offer = await contract.offers(1);
+        console.log('Offer details:', offer);
+
+        if (isPaymentValid(paymentInfo, '1000', 'USD', 'Alice', '1')) {
+            console.log('🥳 Payment is valid');
+
+            // Compliance screening
+            const options = {
+                method: 'post',
+                url: 'https://api.circle.com/v1/w3s/compliance/screening/addresses',
+                headers: {
+                    Authorization: `Bearer ${process.env.CIRCLE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                data: {
+                    address: offer.seller,
+                    chain: 'ETH-SEPOLIA'
+                }
+            };
+
+            const screeningResponse = await axios.request(options);
+            console.log('Screening result:', screeningResponse.data);
+
+            // Execute contract and store data
+            await triggerSmartContract(paymentInfo);
+            await uploadFile('nagaBanking', './Data/payment.xml');
+        } else {
+            console.error('Invalid payment information');
+        }
+    } catch (error) {
+        console.error('Execution failed:', error.message);
     }
-
 }
 
-execution()
+// Run the execution
+execution().catch(console.error);
 
 
 

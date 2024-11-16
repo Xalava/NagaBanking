@@ -5,6 +5,7 @@ if (!process.env['SEED']) {
   throw new Error(`Missing required environment variable SEED`);
 }
 
+const providerApiKey = process.env.ALCHEMY_API_KEY || "oKxs-03sij-U_N0iOlrSsZFr29-IqbuF";
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -26,6 +27,11 @@ module.exports = {
       url: `https://goerli-rollup.arbitrum.io/rpc`,
       accounts: [process.env.PRIVATE_KEY],
       chainId: 421613,
+    },
+
+    arbitrumSepolia: {
+      url: `https://arb-sepolia.g.alchemy.com/v2/${providerApiKey}`,
+      accounts: [process.env.PRIVATE_KEY],
     },
     scroll: {
       url: 'https://rpc.scroll.io',
