@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs';
+import { promises as pfs } from 'fs';
 import xml2js from 'xml2js';
 import { ethers } from 'ethers';
 // import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.8.1/ethers.min.js";
@@ -41,7 +41,7 @@ function isPaymentValid(payment, amount, currency, sender, offerID) {
 
 async function extractPaymentInfo() {
     try {
-        const data = await fs.readFile('./Data/payment.xml')
+        const data = await pfs.readFile('./Data/payment.xml')
         const paymentInfo = await xml2js.parseStringPromise(data)
         return paymentInfo
     } catch (err) {
@@ -73,6 +73,48 @@ async function triggerSmartContract(paymentInfo) {
     }
 }
 
+
+// AYAKE
+
+
+import axios from "axios";
+
+const API_BASE_URL = 'http://localhost:8000';
+
+async function apiRequest(method, endpoint, data = null) {
+    try {
+        const response = await axios({
+            method,
+            url: `${API_BASE_URL}${endpoint}`,
+            data,
+        });
+        console.log(response.data);
+    } catch (error) {
+        console.error(error.response ? error.response.data : error.message);
+    }
+}
+
+apiRequest('POST', '/buckets', { bucketName: 'nagaBanking' });
+
+import FormData from 'form-data';
+import fs from 'fs';
+
+
+async function uploadFile(bucketName, filePath) {
+    const form = new FormData();
+    form.append('file', fs.createReadStream(filePath));
+
+    try {
+        const response = await axios.post(`${API_BASE_URL}/buckets/${bucketName}/files`, form, {
+            headers: form.getHeaders(),
+        });
+        console.log(response.data);
+    } catch (error) {
+        console.error(error.response ? error.response.data : error.message);
+    }
+}
+
+
 // EXECUTION
 
 async function execution() {
@@ -80,6 +122,8 @@ async function execution() {
     if (isPaymentValid(paymentInfo, '1000', 'USD', 'Alice', '1')) {
         console.log(' 🥳 Payment is valid');
         triggerSmartContract(paymentInfo)
+        uploadFile('nagaBanking', './Data/payment.xml');
+
     } else {
         console.error('Missing in payment information');
     }

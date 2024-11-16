@@ -58,7 +58,7 @@ module.exports = {
       chainId: 58008,
     },
     kinto: {
-      url: process.env.KINTO_RPC || 'https://rpc.kinto.xyz',
+      url: process.env.KINTO_RPC || "https://rpc.kinto-rpc.com/",
       accounts: [process.env.PRIVATE_KEY],
     },
     bitkub: {

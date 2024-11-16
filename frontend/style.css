@@ -1,5 +1,6 @@
 .container {
     padding-top: 2rem;
+    padding-bottom: 6rem;
 }
 
 .hidden {
@@ -13,26 +14,65 @@
     border-radius: 4px;
 }
 
-.nav-tabs {
-    margin-bottom: 2rem;
-}
-
 .offer-status {
     float: right;
     font-size: 0.8em;
     color: #666;
 }
 
-#wallet-status {
+.nav-tabs {
+    margin-bottom: 2rem;
+}
+
+
+/* #wallet-status {
     position: fixed;
     top: 2rem;
     right: 2rem;
     font-size: 0.8em;
-}
+} */
 
 #notification {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
-    color: #666
+    color: #666;
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.3s ease-in-out;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#notification.visible {
+    opacity: 1;
+}
+
+#logo-container {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+}
+
+#logo-container img {
+    width: 48px;
+    height: 48px;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem 0;
+    color: #666;
+    font-size: 0.9em;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: white;
+}
+
+footer a {
+    color: #3498db;
+    text-decoration: none;
 }

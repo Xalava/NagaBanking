@@ -41,6 +41,7 @@ Buyer triggher payments
 ### Smart Contracts
 - Dev Framework: Hardhat
 - Language: Solidity ^0.8.26
+- MPC for privacy of IBANs
 
 ### Bank Server
 - Runtime: Node.js
@@ -60,3 +61,16 @@ npx hardhat node
 npx hardhat ignition deploy ignition/modules/naga.js --network localhost
 liveserver frontend/ # or equivalent
 ```
+
+### File storage
+
+```sh
+docker pull akave/akavelink:latest
+docker run -d \
+  -p 8000:3000 \
+  -e NODE_ADDRESS="connect.akave.ai:5500" \ 
+  -e PRIVATE_KEY="your_private_key" \
+  akave/akavelink:latest
+```
+
+public_node_address" \
