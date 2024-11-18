@@ -1,14 +1,36 @@
 # Naga Banking - Banking Software for Modern Banks 
 
-![Naga Banking](./frontend/naga-banking.png)
-
-## Overview
 Naga Banking is a suite facilitating bank operations when interacting with tokenized assets.
+
+*Example scenario:*
+
+Alice, a seller of USDC, uses the interface to formulate an offer. Bob, the buyer, can check the offers, including the KYC information when available.
+
+When Bob pays Alice for a particular offer, Naga Banking can automatically verify the SWIFT message, associate it with the correct offer, screen the buyer's address, and trigger the USDC payment. 
+
+```mermaid
+sequenceDiagram
+   participant 👩‍🦰 Seller
+   participant 📄 SmartContract
+   participant 🐍 Bank
+   participant 👨‍🦲 Buyer
+
+   👩‍🦰 Seller->>📄 SmartContract: makeOffer (Lock USDC)
+   👨‍🦲 Buyer->>📄 SmartContract: Signal interest
+   👨‍🦲 Buyer->>🐍 Bank: Makes Payment
+   🐍 Bank->>🐍 Bank: Verifies SWIFT message
+   🐍 Bank->>🐍 Bank: Screens the buyer address
+   🐍 Bank->>📄 SmartContract: Triggers the payment
+   📄 SmartContract->>👨‍🦲 Buyer: Receives USDC
+   🐍 Bank->>👩‍🦰 Seller: Receives funds
+```
+
 
 ## System Architecture
 
 1. **NagaBank Server**
-   - Processes SWIFT messages, verifies payment details and authorisations
+   - Processes SWIFT messages, verifying payment details
+   - Screen buyer addresses
    - Triggers smart contract unlocks (or minting)
 
 2. **Smart Contracts**
@@ -17,35 +39,26 @@ Naga Banking is a suite facilitating bank operations when interacting with token
       - Handles locking/unlocking of funds
       - Controls offer lifecycle
    - Tokenized Deposit Smart Contract
-   - Contains current account for each user registered at the bank
+      - Contains current account for each user registered at the bank
 
 3. **Web Interface**
    - Offer creation interface
-   - Order book viewing
-   - Manages bank dashboard
+   - Offers viewing
+   - Bank dashboard
 
-
-## Flow Diagram
-```
-Seller -> makeOffer (Lock USDC) 
-                    ↓
-Buyer -> Views Offer -> SignalIndent -> Makes SWIFT Payment
-                    ↓
-NagaBank -> Verifies SWIFT -> Unlocks offers
-                    ↓
-Buyer triggher payments
-```
 
 ## Technical Stack
 
 ### Smart Contracts
 - Dev Framework: Hardhat
-- Language: Solidity ^0.8.26
+- Language: Solidity 0.8.26
+- KYC information: Kinto KYC viewer
 - MPC for privacy of IBANs
 
 ### Bank Server
 - Runtime: Node.js
-- Database: Ayake
+- Transaction screening: Circle Compliance Engine
+- Storage: Ayake
 
 ### Frontend
 - Framework: Vanilla JavaScript
@@ -54,10 +67,11 @@ Buyer triggher payments
 
 
 ## Usage
+
+### Launching
 ```sh
 npx hardhat compile
 npx hardhat node
---
 npx hardhat ignition deploy ignition/modules/naga.js --network localhost
 liveserver frontend/ # or equivalent
 ```
@@ -73,4 +87,5 @@ docker run -d \
   akave/akavelink:latest
 ```
 
-public_node_address" \
+
+<img src="./frontend/naga-banking.png" alt="Naga Banking" width="100">

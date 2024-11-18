@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
+    <FIToFICstmrCdtTrf>
+        <!-- Group Header - Contains message metadata -->
+        <GrpHdr>
+            <MsgId>CRT12345</MsgId>
+            <CreDtTm>2024-11-17T15:00:00</CreDtTm>
+            <!-- Sending Bank (US) -->
+            <InstgAgt>
+                <FinInstnId>
+                    <BIC>CCCCDE33</BIC>
+                </FinInstnId>
+            </InstgAgt>
+            <!-- Receiving Bank (UK) -->
+            <InstdAgt>
+                <FinInstnId>
+                    <BIC>DDDDFR44</BIC>
+                </FinInstnId>
+            </InstdAgt>
+        </GrpHdr>
+        
+        <!-- Credit Transfer Transaction Information -->
+        <CdtTrfTxInf>
+            <!-- Payment Identification -->
+            <PmtId>
+                <InstrId>1234567890</InstrId>
+                <EndToEndId>END1234567890</EndToEndId>
+            </PmtId>
+            
+            <!-- Payment Amount -->
+            <IntrBkSttlmAmt Ccy="EUR">7500.00</IntrBkSttlmAmt>
+            <!-- Charges Bearer -->
+            <ChrgBr>SLEV</ChrgBr>
+            
+            <!-- Debtor (Sender) Information -->
+            <Dbtr>
+                <Nm>Carole</Nm>
+                <PstlAdr>
+                    <Ctry>DE</Ctry>
+                </PstlAdr>
+                <Id>
+                    <OrgId>
+                        <BICOrBEI>CCCCDE33</BICOrBEI>
+                    </OrgId>
+                </Id>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <IBAN>DE333</IBAN>
+                </Id>
+            </DbtrAcct>
+            
+            <!-- Creditor (Receiver) Information -->
+            <Cdtr>
+                <Nm>Denis</Nm>
+                <PstlAdr>
+                    <Ctry>FR</Ctry>
+                </PstlAdr>
+                <Id>
+                    <OrgId>
+                        <BICOrBEI>DDDDFR44</BICOrBEI>
+                    </OrgId>
+                </Id>
+            </Cdtr>
+            <CdtrAcct>
+                <Id>
+                    <IBAN>FR123</IBAN>
+                </Id>
+            </CdtrAcct>
+            
+            <!-- Remittance Information -->
+            <RmtInf>
+                <Ustrd>2</Ustrd>
+            </RmtInf>
+        </CdtTrfTxInf>
+    </FIToFICstmrCdtTrf>
+</Document>

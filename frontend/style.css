@@ -31,23 +31,24 @@
     right: 2rem;
     font-size: 0.8em;
 } */
-
 #notification {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    color: #666;
-    background: white;
+    margin-top: 2rem;
+    color: #2c3e50;
     padding: 1rem 2rem;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: opacity 0.3s ease-in-out;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease-in-out;
     opacity: 0;
-    pointer-events: none;
+    transform: translateY(20px);
+    z-index: 1000;
+    font-weight: 500;
+    font-size: normal;
+    border-left: 4px solid #9b4dca;
 }
 
 #notification.visible {
     opacity: 1;
+    transform: translateY(0);
 }
 
 #logo-container {

@@ -8,13 +8,13 @@
             <!-- Sending Bank (US) -->
             <InstgAgt>
                 <FinInstnId>
-                    <BIC>ABCDUS11</BIC>
+                    <BIC>ABCDGB11</BIC>
                 </FinInstnId>
             </InstgAgt>
             <!-- Receiving Bank (UK) -->
             <InstdAgt>
                 <FinInstnId>
-                    <BIC>XYZLGB2L</BIC>
+                    <BIC>XYZLUS22</BIC>
                 </FinInstnId>
             </InstdAgt>
         </GrpHdr>
@@ -36,17 +36,17 @@
             <Dbtr>
                 <Nm>Alice</Nm>
                 <PstlAdr>
-                    <Ctry>US</Ctry>
+                    <Ctry>GB</Ctry>
                 </PstlAdr>
                 <Id>
                     <OrgId>
-                        <BICOrBEI>ABCDUS11</BICOrBEI>
+                        <BICOrBEI>ABCDGB11</BICOrBEI>
                     </OrgId>
                 </Id>
             </Dbtr>
             <DbtrAcct>
                 <Id>
-                    <IBAN>US11345678901234567890</IBAN>
+                    <IBAN>GB123</IBAN>
                 </Id>
             </DbtrAcct>
             
@@ -54,17 +54,17 @@
             <Cdtr>
                 <Nm>Bob</Nm>
                 <PstlAdr>
-                    <Ctry>GB</Ctry>
+                    <Ctry>US</Ctry>
                 </PstlAdr>
                 <Id>
                     <OrgId>
-                        <BICOrBEI>XYZLGB22</BICOrBEI>
+                        <BICOrBEI>XYZLUS22</BICOrBEI>
                     </OrgId>
                 </Id>
             </Cdtr>
             <CdtrAcct>
                 <Id>
-                    <IBAN>GB22876543210987654321</IBAN>
+                    <IBAN>US123</IBAN>
                 </Id>
             </CdtrAcct>
             

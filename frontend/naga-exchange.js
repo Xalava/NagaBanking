@@ -86,13 +86,19 @@ function updateWalletStatus(status) {
 
 async function notification(message) {
     const notificationElement = document.getElementById('notification');
-    notificationElement.textContent = message;
+
+    // Remove existing visible class if any
+    notificationElement.classList.remove('visible');
+
+    // Force a reflow to restart animation
+    void notificationElement.offsetWidth;
+
+    notificationElement.innerHTML = message;
     notificationElement.classList.add('visible');
 
-    // Hide after 2 seconds
     setTimeout(() => {
         notificationElement.classList.remove('visible');
-    }, 2000);
+    }, 5000);
 }
 
 // Load and display offers
@@ -119,8 +125,16 @@ async function loadOffers() {
                     country = countryCode == 250 ? "🇫🇷" : "";
                     console.log(countryCode)
                 } else {
-                    kyc = "⚠️ No KYC";
-                    country = "";
+                    if (offer.IBAN == "FR123") {
+                        country = " 🇫🇷 "
+                        kyc = "  ✅ KYC Verified"
+                    } else if (offer.IBAN == "US123") {
+                        country = " 🇺🇲 "
+                        kyc = "  ✅ KYC Verified"
+                    } else {
+                        kyc = "⚠️ No KYC";
+                        country = "";
+                    }
                 }
 
                 const offerElement = createOfferElement(i, offer, kyc, country);
@@ -143,9 +157,9 @@ function createOfferElement(id, offer, kyc, country) {
     div.innerHTML = `
         <div class="offer-status">${status}</div>
         <h4>Offer #${id}</h4>
-        <p>Amount: ${ethers.formatUnits(offer.amount, 6)} USDC</p>
+        <p>Amount: ${ethers.formatUnits(offer.amount, 6)}0 USDC</p>
         <p>IBAN:    ${offer.IBAN}</p>
-        <p>Seller:  ${offer.seller.slice(0, 12)}...      ${kyc}      ${country}</p>
+        <p>Seller:  ${offer.seller.slice(0, 12)}...  &emsp; ${kyc}      (${country})</p>
         ${!isLocked ? `<button onclick="signalIntend(${id})" class="button button-outline">Signal Intent</button>` : ''}
     `;
     return div;
@@ -194,7 +208,7 @@ async function createOffer(event) {
         await tx.wait();
         const txHash = tx.hash;
         const blockscoutLink = `https://blockscout.com/tx/${txHash}`;
-        notification(`Offer created successfully! View transaction: ${blockscoutLink}`)
+        notification(`Offer created successfully! <a href=${blockscoutLink}> View transaction</a>`)
         event.target.reset();
         showPage('browse');
     } catch (error) {

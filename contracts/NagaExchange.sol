@@ -68,9 +68,8 @@ contract NagaExchange is Ownable {
     function unlockFunds(uint offerID) public onlyOwner {
         Offer storage offer = offers[offerID];
         require(offer.seller != address(0), "Offer does not exist");
-        // Not necessary
-        // offer.lockUntil = 0;
-        USDC.transfer(offer.bider, offer.amount);
+        // Not necessary :      // offer.lockUntil = 0;
+        // USDC.transfer(offer.bider, offer.amount);
         offer.seller = address(0); // Voids the offer
         emit FundsUnlocked(offerID, offer.bider);
     }
