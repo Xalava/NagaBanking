@@ -15,11 +15,12 @@
         <img src="naga-banking.png" alt="Naga Banking" title="Naga Banking">
     </div>
 
-    <div class="container">
+    <main class="container">
         <div class="nav-tabs">
             <button class="button" onclick="showPage('browse')">Browse Offers</button>
             <button class="button button-outline" onclick="showPage('create')">Create Offer</button>
-            <button class=" button button button-clear float-right" id="wallet-status">⁉️ Not connected</button>
+            <button class="button button-black button-outline" onclick="showPage('backoffice')">Back Office</button>
+            <button class="button button-clear float-right" id="wallet-status">⁉️ Not connected</button>
         </div>
 
         <div id="browse-page">
@@ -48,8 +49,56 @@
             </form>
         </div>
 
+        <div id="backoffice-page" class="hidden">
+            <h2>Back Office - Offer Validation</h2>
+
+            <div class="offer-card">
+                <h4>
+                    Information on Offer #<span id="offer-id"></span>
+                    <button onclick="changeOffer(-1)" class="button button-clear bold">←</button>
+                    <button onclick="changeOffer(1)" class="button button-clear bold">→</button>
+                </h4>
+                <div class="row">
+                    <div class="column column-75">
+                        <p>Amount: <span id="offer-amount"></span></p>
+                        <p>IBAN: <span id="offer-iban"></span></p>
+                        <p>Seller: <span id="offer-seller"></span></p>
+                        <p>Buyer: <span id="offer-buyer"></span></p>
+                    </div>
+                    <div class="column centered">
+                        <span class="offer-status" id="offer-details-status"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="validation-section">
+                <h4>Validation Steps</h4>
+                <div class="validation-steps">
+                    <div class="validation-step">
+                        <span class="step-icon">1️⃣</span>
+                        <span class="step-label">Payment Validation</span>
+                        <span id="payment-status" class="status-badge pending">Pending</span>
+                    </div>
+                    <div class="validation-step">
+                        <span class="step-icon">2️⃣</span>
+                        <span class="step-label">Compliance Check</span>
+                        <span id="compliance-status" class="status-badge pending">Pending</span>
+                    </div>
+                    <div class="validation-step">
+                        <span class="step-icon">3️⃣</span>
+                        <span class="step-label">Contract Update</span>
+                        <span id="contract-status" class="status-badge pending">Pending</span>
+                    </div>
+                </div>
+            </div>
+            <button class="button button-primary float-right" id="process-button">
+                Process Offer
+            </button>
+        </div>
+
         <div id="notification"></div>
-    </div>
+
+    </main>
 
     <footer>
         Made in Bangkok by <a href="https://xvlv.io" target="_blank">Xavier</a>

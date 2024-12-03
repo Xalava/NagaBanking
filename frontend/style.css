@@ -8,16 +8,11 @@
 }
 
 .offer-card {
-    border: 1px solid #eee;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 4px;
-}
-
-.offer-status {
-    float: right;
-    font-size: 0.8em;
-    color: #666;
+    background: white;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-radius: 8px;
+    border: 1px solid #9b4dca;
 }
 
 .nav-tabs {
@@ -76,4 +71,106 @@ footer {
 footer a {
     color: #3498db;
     text-decoration: none;
+}
+
+.validation-section {
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #9b4dca;
+    margin-bottom: 3rem;
+}
+
+.validation-steps {
+    margin-top: 1rem;
+}
+
+.validation-step {
+    display: flex;
+    align-items: center;
+    padding: 1.2rem;
+    margin: 1rem 0;
+    background: #f4f5f6;
+    border-radius: 4px;
+    border: 0.1rem solid #d1d1d1;
+}
+
+
+.step-icon {
+    margin-right: 1rem;
+    font-size: 1.2em;
+}
+
+.step-label {
+    flex-grow: 1;
+}
+
+.status-badge {
+    min-width: 100px;
+    text-align: center;
+    padding: 0.4rem 1rem;
+    border-radius: 2rem;
+    font-size: 1.2rem;
+    letter-spacing: .1rem;
+}
+
+.status-badge.pending {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.status-badge.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.error {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.validation-status {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* Custom color */
+.button-black {
+    background-color: black;
+    border-color: black;
+}
+
+.button-black.button-clear,
+.button-black.button-outline {
+    background-color: transparent;
+    color: black;
+}
+
+.button-black.button-clear {
+    border-color: transparent;
+}
+
+.offer-status {
+    background: #dadada;
+    border-radius: 8px;
+    padding: 1.5rem;
+    font-variant: uppercase;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.centered {
+    text-align: center;
+}
+
+
+.bold {
+    font-weight: bolder !important;
+    font-size: 1.2em;
+}
+
+#process-button {
+    margin-top: -3rem;
+    /* top: 4rem; */
 }

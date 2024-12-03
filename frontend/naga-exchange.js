@@ -152,15 +152,26 @@ function createOfferElement(id, offer, kyc, country) {
     div.className = 'offer-card';
 
     const isLocked = offer.lockUntil > Date.now() / 1000;
-    const status = isLocked ? '🔒️ Locked' : 'Available';
+    const status = isLocked ? '🔒️ Locked' : '🟢 Available';
 
     div.innerHTML = `
-        <div class="offer-status">${status}</div>
-        <h4>Offer #${id}</h4>
-        <p>Amount: ${ethers.formatUnits(offer.amount, 6)}0 USDC</p>
-        <p>IBAN:    ${offer.IBAN}</p>
-        <p>Seller:  ${offer.seller.slice(0, 12)}...  &emsp; ${kyc}      (${country})</p>
-        ${!isLocked ? `<button onclick="signalIntend(${id})" class="button button-outline">Signal Intent</button>` : ''}
+    <h4>Offer #${id}</h4>
+    <div class="row">
+        <div class="column column-75">
+            <p>Amount: ${ethers.formatUnits(offer.amount, 6)}0 USDC</p>
+            <p>IBAN:    ${offer.IBAN}</p>
+            <p>Seller:  ${offer.seller.slice(0, 12)}...  &emsp; ${kyc}      (${country})</p>
+        </div>
+        <div class="column centered">
+            <p>
+                <span class="offer-status">${status}</span >
+            </p>
+            <br><br>
+            ${!isLocked ? `<button onclick="signalIntend(${id})" class="button button-outline" style="bottom:1rem">Signal Intent</button>` : ''}
+            
+        </div>
+    </div>
+
     `;
     return div;
 }
@@ -217,27 +228,133 @@ async function createOffer(event) {
     }
 }
 
-// Show/hide pages
+// Back Office Functions
+let currentOfferId = 1;
+
+async function changeOffer(delta) {
+    const newOfferId = currentOfferId + delta;
+    if (newOfferId > 0) {
+        currentOfferId = newOfferId;
+        await loadBackOfficeData(currentOfferId);
+    }
+}
+
+// Add this function to get current block
+async function getBlockNumber() {
+    try {
+        const blockNumber = await provider.getBlockNumber();
+        return blockNumber;
+        // document.getElementById('block-number').textContent = blockNumber;
+    } catch (error) {
+        console.error('Error getting block number:', error);
+        // document.getElementById('block-number').textContent = 'Error';
+    }
+}
+
+// Update loadBackOfficeData to include block number update
+async function loadBackOfficeData(offerId = currentOfferId) {
+    try {
+        const offer = await nagaexContract.offers(offerId);
+
+        // Update the UI with offer details
+        document.getElementById('offer-id').textContent = offerId;
+        document.getElementById('offer-amount').textContent = `${ethers.formatUnits(offer.amount, 6)} USDC`;
+        document.getElementById('offer-iban').textContent = offer.IBAN;
+        document.getElementById('offer-seller').textContent = `${offer.seller.slice(0, 6)}...`;
+        document.getElementById('offer-buyer').textContent = offer.bider === ethers.ZeroAddress ?
+            'No buyer yet' :
+            `${offer.bider.slice(0, 6)}...`;
+
+        document.getElementById('offer-details-status').textContent = (() => {
+            updateScreeningStatus('payment-status', 'pending');
+            updateScreeningStatus('compliance-status', 'pending');
+            updateScreeningStatus('contract-status', 'pending');
+
+            if (offer.IBAN == "") {
+                return '❌ Not Available';
+            }
+            if (offer.bider == ethers.ZeroAddress) {
+                return '✅ Available';
+            }
+            if (offer.seller == ethers.ZeroAddress) {
+                updateScreeningStatus('payment-status', 'success');
+                updateScreeningStatus('compliance-status', 'success');
+                updateScreeningStatus('contract-status', 'success');
+                document.getElementById('process-button').disabled = true;
+
+                return '💰 Sold'
+            }
+
+            if (offer.lockUntil > getBlockNumber()) {
+                return '🔒️ Locked';
+            }
+
+            // final case : to be processed (should be coonditional on the presence of a swift message)
+            document.getElementById('process-button').disabled = false;
+            return '⚠️ Pending';
+
+        })()
+
+    } catch (error) {
+        console.error('Error loading offer:', error);
+        notification('Failed to load offer details');
+    }
+}
+
+// Update screening status badges
+function updateScreeningStatus(elementId, status) {
+    const badge = document.getElementById(elementId);
+    badge.className = 'status-badge ' + status;
+    badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+// Process the entire offer
+async function processOffer() {
+    // Mock the processing steps
+    updateScreeningStatus('compliance-status', 'pending');
+    setTimeout(() => {
+        updateScreeningStatus('payment-status', 'success');
+        notification('Payment validated successfully');
+        setTimeout(() => {
+            updateScreeningStatus('compliance-status', 'success');
+            notification('Compliance check passed');
+
+            // Mock contract update
+            setTimeout(() => {
+                updateScreeningStatus('contract-status', 'success');
+                notification('Contract updated successfully');
+                document.getElementById('process-button').disabled = true;
+            }, 2000);
+        }, 2000);
+    }, 2000);
+}
+
+// Update showPage function to include back office
 function showPage(page) {
     document.getElementById('browse-page').classList.toggle('hidden', page !== 'browse');
     document.getElementById('create-page').classList.toggle('hidden', page !== 'create');
+    document.getElementById('backoffice-page').classList.toggle('hidden', page !== 'backoffice');
 
+    // Update button states
     document.querySelector('[onclick="showPage(\'browse\')"]')
         .classList.toggle('button-outline', page !== 'browse');
     document.querySelector('[onclick="showPage(\'create\')"]')
         .classList.toggle('button-outline', page !== 'create');
+    document.querySelector('[onclick="showPage(\'backoffice\')"]')
+        .classList.toggle('button-outline', page !== 'backoffice');
 
     if (page === 'browse') loadOffers();
+    if (page === 'backoffice') loadBackOfficeData();
     currentPage = page;
 }
 
-// Setup event listeners
+// Update the main setup function
 function setupEventListeners() {
     document.getElementById('create-offer-form').addEventListener('submit', createOffer);
+    document.getElementById('process-button').addEventListener('click', processOffer);
 
-    // Listen for contract events
+    // Contract event listeners...
     nagaexContract.on('OfferMade', (offerId, amount, iban, user) => {
-
         if (currentPage === 'browse') loadOffers();
     });
 
@@ -249,6 +366,14 @@ function setupEventListeners() {
 // Make functions globally available
 window.showPage = showPage;
 window.signalIntend = signalIntend;
+window.processOffer = processOffer;
+window.changeOffer = changeOffer;
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', initWeb3); 
+document.addEventListener('DOMContentLoaded', initWeb3);
+
+
+
+window.onload = function () {
+    loadOffers()
+};
