@@ -16,6 +16,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.SEED,
       },
+      chainId: 1337,
       // chainId: 31337,
     },
     arbitrum: {

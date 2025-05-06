@@ -20,6 +20,7 @@
             <button class="button" onclick="showPage('browse')">Browse Offers</button>
             <button class="button button-outline" onclick="showPage('create')">Create Offer</button>
             <button class="button button-black button-outline" onclick="showPage('backoffice')">Back Office</button>
+            <button class="button button-black button-outline" onclick="showPage('payment')">D€ Payments</button>
             <button class="button button-clear float-right" id="wallet-status">⁉️ Not connected</button>
         </div>
 
@@ -95,6 +96,13 @@
                 Process Offer
             </button>
         </div>
+
+        <div id="payment-page" class="hidden">
+            <h2> Digital Euro</h2>
+            <h3>Balances & Reservations</h3>
+            <div id="holdings"></div>
+        </div>
+
 
         <div id="notification"></div>
 

@@ -27,23 +27,45 @@
     font-size: 0.8em;
 } */
 #notification {
-    margin-top: 2rem;
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    width: auto;
+    max-width: 90%;
+    z-index: 10000;
     color: #2c3e50;
-    padding: 1rem 2rem;
+    padding: 1.5rem 3rem;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease-in-out;
     opacity: 0;
-    transform: translateY(20px);
-    z-index: 1000;
+    border-left: 4px solid currentColor;
     font-weight: 500;
-    font-size: normal;
-    border-left: 4px solid #9b4dca;
 }
 
 #notification.visible {
     opacity: 1;
-    transform: translateY(0);
+    background: white;
+    transform: translate(-50%, 0);
+}
+
+#notification.info {
+    /* background: #cce5ff; */
+    /* color: #004085; */
+    border-left-color: #0056b3;
+}
+
+#notification.success {
+    /* background: #d4edda; */
+    /* color: #155724; */
+    border-left-color: #28a745;
+}
+
+#notification.error {
+    /* background: #f8d7da; */
+    /* color: #721c24; */
+    border-left-color: #dc3545;
 }
 
 #logo-container {
@@ -93,7 +115,6 @@ footer a {
     border-radius: 4px;
     border: 0.1rem solid #d1d1d1;
 }
-
 
 .step-icon {
     margin-right: 1rem;
@@ -173,4 +194,33 @@ footer a {
 #process-button {
     margin-top: -3rem;
     /* top: 4rem; */
+}
+
+/* Spinner for action feedback on reservation buttons */
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #333;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 0.5rem;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Lighten modal dialog backdrop */
+dialog {
+    z-index: 100;
+}
+
+dialog::backdrop {
+    z-index: 90;
+    background: rgba(0, 0, 0, 0.15);
 }

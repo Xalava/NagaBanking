@@ -5,14 +5,21 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js mockoffers && nodemon index.js serve"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@koa/cors": "^5.0.0",
+    "@koa/router": "^13.1.0",
     "axios": "^1.7.7",
+    "dotenv": "^16.5.0",
     "ethers": "^6.13.4",
     "fs": "^0.0.1-security",
+    "koa": "^3.0.0",
+    "koa-bodyparser": "^4.4.1",
+    "koa-static": "^5.0.0",
     "node-fetch": "^3.3.2",
     "xml2js": "^0.6.2"
   }

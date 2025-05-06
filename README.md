@@ -58,7 +58,7 @@ sequenceDiagram
 ### Bank Server
 - Runtime: Node.js
 - Transaction screening: Circle Compliance Engine
-- Storage: Ayake
+<!-- - Storage: Ayake -->
 
 ### Frontend
 - Framework: Vanilla JavaScript
@@ -71,9 +71,12 @@ sequenceDiagram
 ### Launching
 ```sh
 npx hardhat compile
+npx hardhat clean #optional
+
 npx hardhat node
-npx hardhat ignition deploy ignition/modules/naga.js --network localhost
-liveserver frontend/ # or equivalent
+npx hardhat ignition deploy ignition/modules/naga.js --network localhost --reset # optional for reset
+#liveserver frontend/ # or equivalent
+cd server && node index.js mockoffers && nodemon index.js serve ## or nodemon
 ```
 
 ### File storage
