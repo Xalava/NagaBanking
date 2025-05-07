@@ -69,14 +69,27 @@ sequenceDiagram
 ## Usage
 
 ### Launching
-```sh
-npx hardhat compile
-npx hardhat clean #optional
 
+The short version:
+
+```sh
+npm i && npm start
+```
+
+The long version:
+
+```sh
+## Install main node modules and server modules
+npm i && cd server && npm i
+npm i nodemon -g
+## First terminal a hardhat node
 npx hardhat node
-npx hardhat ignition deploy ignition/modules/naga.js --network localhost --reset # optional for reset
-#liveserver frontend/ # or equivalent
-cd server && node index.js mockoffers && nodemon index.js serve ## or nodemon
+## Second terminal, reset hardhat and compile. 
+npx hardhat clean && npx hardhat compile
+npx hardhat ignition deploy ignition/modules/naga.js --network localhost --reset # or npm run deploy
+
+## Third terminal, serve the server
+cd server && node index.js mockoffers && nodemon index.js serve ## or npm run serve
 ```
 
 ### File storage

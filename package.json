@@ -5,7 +5,8 @@
   "main": "hardhat.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "npx hardhat ignition deploy ignition/modules/naga.js --network localhost"
+    "deploy": "npx hardhat ignition deploy ignition/modules/naga.js --network localhost --reset",
+    "serve": "cd server && node index.js mockoffers && nodemon index.js"
   },
   "author": "",
   "license": "ISC",
