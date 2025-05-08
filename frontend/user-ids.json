@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Alice",
+        "dEid": "3c07652f-be67-4863-8328-84d832be8362",
+        "address": "0xb8d11d372f050cf85111d9bf7daab44eeccb9e28",
+        "IBAN": "AT12345"
+    },
+    {
+        "name": "Bob",
+        "dEid": "9e2c02d0-0178-4c9e-9d21-e5c8aac84ac2",
+        "address": "0xaeA9aA7d7a39Ee030C99c06e37581B2f9ec7201d",
+        "IBAN": "BE12345"
+    },
+    {
+        "name": "Charles",
+        "dEid": "836ac69d-a52c-4c21-9236-b5a8f74e5326",
+        "address": "0x9f69e90B93ede6c73bC935D9ee083b1ef71d58A4",
+        "IBAN": "FR12345"
+    },
+    {
+        "name": "Denise",
+        "dEid": "12004eb1-82b4-4878-bd44-adcdc81bd0e7",
+        "address": "0xcd0442eC07927D1CCE9ec7bfF1C8A1efDa0C2E7b",
+        "IBAN": "DE12345"
+    }
+]

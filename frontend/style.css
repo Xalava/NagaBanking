@@ -106,6 +106,31 @@ footer a {
     margin-top: 1rem;
 }
 
+.validation-steps .validation-step {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.validation-steps .validation-step .step-icon {
+    margin-right: 1rem;
+}
+
+.validation-steps .validation-step .step-content {
+    flex: 1;
+}
+
+.validation-steps .validation-step .info-text {
+    margin-top: 0.25rem;
+    color: #555;
+    font-size: 0.9em;
+}
+
+.validation-steps .validation-step .button.float-right {
+    margin-left: 1rem;
+
+}
+
 .validation-step {
     display: flex;
     align-items: center;
@@ -218,9 +243,13 @@ footer a {
 /* Lighten modal dialog backdrop */
 dialog {
     z-index: 100;
+    border-radius: 8px;
+    border: 1px solid #9b4dca;
+    padding: 3rem;
+
 }
 
 dialog::backdrop {
     z-index: 90;
-    background: rgba(0, 0, 0, 0.15);
+    /* background: rgba(0, 0, 0, 0.15); */
 }

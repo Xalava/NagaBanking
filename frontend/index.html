@@ -1,11 +1,17 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html> -->
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NagaExchange</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+    <meta name="color-scheme" content="light">
+
+
+
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="naga-banking.png" type="image/png">
 </head>
@@ -21,7 +27,9 @@
             <button class="button button-outline" onclick="showPage('create')">Create Offer</button>
             <button class="button button-black button-outline" onclick="showPage('backoffice')">Back Office</button>
             <button class="button button-black button-outline" onclick="showPage('payment')">D€ Payments</button>
-            <button class="button button-clear float-right" id="wallet-status">⁉️ Not connected</button>
+            <button class="button button-clear float-right" id="wallet-button">
+                <span id="wallet-status">⁉️ Not connected</span>
+            </button>
         </div>
 
         <div id="browse-page">
@@ -105,6 +113,40 @@
 
 
         <div id="notification"></div>
+
+        <dialog id="reservation-dialog" closedby="any">
+            <form method="dialog" style="text-align: right"><button id="close-btn" title="Close"
+                    type="button">✕</button></form>
+            <h2>Digital Euro Reservation</h2>
+            <div class="validation-steps">
+                <div class="validation-step">
+                    <span class="step-icon">1️⃣</span>
+                    <div class="step-content">
+                        <p>Use the Digital Euro to reserve funds</p>
+                        <p id="reservation-infos" class="info-text"></p>
+                    </div>
+                    <button id="reserve-btn" class="button float-right">Reserve <span
+                            id="reserve-btn-status"></span></button>
+                </div>
+                <div class="validation-step">
+                    <span class="step-icon">2️⃣</span>
+                    <div class="step-content">
+                        <p>Signal your intent to buy the offer onchain</p>
+                        <p id="intend-infos" class="info-text"></p>
+                    </div>
+                    <button id="intend-btn" class="button float-right" disabled>Intent <span
+                            id="intend-btn-status"></span></button>
+                </div>
+                <div class="validation-step">
+                    <span class="step-icon">3️⃣</span>
+                    <div class="step-content">
+                        <p>Pay using the digital euro reservation and finalize the offer onchain</p>
+                    </div>
+                    <button id="finalize-btn" class="button float-right" disabled>Finalize <span
+                            id="finalize-btn-status"></span></button>
+                </div>
+            </div>
+        </dialog>
 
     </main>
 

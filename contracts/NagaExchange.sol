@@ -15,7 +15,6 @@ contract NagaExchange is Ownable {
 
     struct Offer {
         uint amount;
-        string IBAN;
         address seller;
         uint lockUntil;
         address bider;
@@ -24,7 +23,7 @@ contract NagaExchange is Ownable {
     mapping(uint => Offer) public offers;
     mapping(address => bool) public whitelist;
 
-    event OfferMade(uint offerID, uint amount, string IBAN, address user);
+    event OfferMade(uint offerID, uint amount, address user);
     event OfferLocked(uint offerID, address user);
     event FundsUnlocked(uint offerID, address user);
 
@@ -34,7 +33,7 @@ contract NagaExchange is Ownable {
         whitelist[msg.sender] = true;
     }
 
-    function makeOffer(uint amount, string memory IBAN) public {
+    function makeOffer(uint amount) public {
         // require(
         //     USDC.transferFrom(msg.sender, address(this), amount),
         //     "Transfer failed"
@@ -43,13 +42,12 @@ contract NagaExchange is Ownable {
         offerCounter++;
         offers[offerCounter] = Offer({
             amount: amount,
-            IBAN: IBAN,
             seller: msg.sender,
             lockUntil: 0,
             bider: address(0)
         });
 
-        emit OfferMade(offerCounter, amount, IBAN, msg.sender);
+        emit OfferMade(offerCounter, amount, msg.sender);
     }
 
     function signalIntend(uint offerID) public {

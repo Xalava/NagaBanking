@@ -1,5 +1,15 @@
 import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.min.js";
 
+let userIds = [];
+(async () => {
+    try {
+        const res = await fetch('/user-ids.json');
+        userIds = await res.json();
+    } catch (e) { console.error('Failed to load ids.json', e); }
+})();
+
+let currentUser = null;
+
 const LOCALRUN = true;
 // Contract configuration
 
@@ -7,11 +17,11 @@ const NAGAEX_ADDRESS = "0xA9E1a01Df3a691d00581297F37dE279120996BC3";
 const USDC_ADDRESS = "0x14e195D27FFF5F4A1139CB7f6e0F5712F8d420B4";
 
 const NAGAEX_ABI = [
-    "function makeOffer(uint amount, string memory IBAN) public",
+    "function makeOffer(uint amount) public",
     "function signalIntend(uint offerID) public",
-    "function offers(uint) public view returns (uint amount, string IBAN, address seller, uint lockUntil, address bider)",
+    "function offers(uint) public view returns (uint amount, address seller, uint lockUntil, address bider)",
     "function offerCounter() public view returns (uint)",
-    "event OfferMade(uint offerID, uint amount, string IBAN, address user)",
+    "event OfferMade(uint offerID, uint amount, address user)",
     "event OfferLocked(uint offerID, address user)"
 ];
 
@@ -69,24 +79,40 @@ async function initWeb3() {
             signer = await provider.getSigner();
             nagaexContract = new ethers.Contract(NAGAEX_ADDRESS, NAGAEX_ABI, signer);
             usdContract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
+            const userAddress = await signer.getAddress();
+            currentUser = userIds.find(user => user.address.toLowerCase() === userAddress.toLowerCase());
+            if (!currentUser) {
+                notification('User unknown connected', 'info');
+                currentUser.name = "Unknown";
+                currentUser.address = userAddress;
+                currentUser.dEid = "";
 
-            updateWalletStatus('✅ Connected: ' + (await signer.getAddress()).slice(0, 6) + '...');
+
+            } else {
+                notification('User ' + currentUser.name + ' connected', 'info');
+            }
+            updateWalletStatus(currentUser);
 
             setupEventListeners();
         } catch (error) {
             console.error('Error initializing Web3:', error);
-            updateWalletStatus('Connection failed');
+            notification('Connection failed', 'error');
         }
     } else {
-        updateWalletStatus('Please install MetaMask');
+        notification('Please install MetaMask', 'info');
     }
 }
 
 // Update wallet status display
-function updateWalletStatus(status) {
-    document.getElementById('wallet-status').textContent = status;
-    notification(status, 'info')
+function updateWalletStatus(user) {
+    const statusEl = document.getElementById('wallet-status');
+    const walletButton = document.getElementById('wallet-button');
+
+    statusEl.innerHTML = `✅ ${user.name} connected`;
+    const tooltip = `User: ${user.name}\nAddress: ${user.address}\nD€ ID: ${user.dEid}`;
+    walletButton.setAttribute('title', tooltip);
 }
+
 // Display notification
 
 async function notification(message, type = 'info') {
@@ -106,7 +132,7 @@ async function notification(message, type = 'info') {
         notificationElement.classList.remove('visible');
     }, 5000);
 }
-
+let offers = [{ offer: null, seller: null, kyc: null, country: null }] // first offer is empty as we have no offer 0
 // Load and display offers
 async function loadOffers() {
     if (loadOffersRunning) return;
@@ -123,41 +149,60 @@ async function loadOffers() {
         offersList.innerHTML = '';
 
         for (let i = 1; i <= offerCount; i++) {
-            const offer = await nagaexContract.offers(i);
+            const offer = await nagaexContract.offers(i)
             if (offer.seller !== ethers.ZeroAddress) {
-
+                const seller = userIds.find(user => user.address === offer.seller)
                 let kyc, country;
-                if (chainId == 0x1ecf) {
-                    console.log("We are on Kinto")
-                    console.log("SELLER", offer.seller)
+                if (!seller) {
+                    console.log("Seller not found", offer.seller)
 
-                    const seller = "0x139E312fCD4c35302a8d80a404d54a145A3a1c19" //offer.seller;
-                    let isSellerKYCed = await kycContract.isKYC(seller);
-                    console.log(isSellerKYCed)
-                    kyc = isSellerKYCed ? "✅ KYC Verified" : "⚠️ No KYC"
-                    let countryCode = await kycContract.getCountry(seller);
-                    country = countryCode == 250 ? "🇫🇷" : "";
-                    console.log(countryCode)
+                    seller.IBAN = "Not available";
+                    seller.name = "Unknown";
+                    kyc = "⚠️ No KYC";
+                    country = "🏳";
                 } else {
-                    // Put the approrpiate flag depending on the first two letters of the iban
-                    const countryCode = offer.IBAN.substring(0, 2).toUpperCase();
-                    country = {
-                        AE: " 🇦🇪 ", AL: " 🇦🇱 ", AD: " 🇦🇩 ", AT: " 🇦🇹 ", BY: " 🇧🇾 ", BE: " 🇧🇪 ", BA: " 🇧🇦 ", BG: " 🇧🇬 ", BH: " 🇧🇭 ", BR: " 🇧🇷 ", BN: " 🇧🇳 ", CA: " 🇨🇦 ", CH: " 🇨🇭 ", CN: " 🇨🇳 ", CY: " 🇨🇾 ", CZ: " 🇨🇿 ", DE: " 🇩🇪 ", DK: " 🇩🇰 ", DO: " 🇩🇴 ", EE: " 🇪🇪 ", EG: " 🇪🇬 ", ES: " 🇪🇸 ", FI: " 🇫🇮 ", FR: " 🇫🇷 ", GB: " 🇬🇧 ", GE: " 🇬🇪 ", GI: " 🇬🇮 ", GR: " 🇬🇷 ", HR: " 🇭🇷 ", HU: " 🇭🇺 ", IE: " 🇮🇪 ", IL: " 🇮🇱 ", IN: " 🇮🇳 ", IS: " 🇮🇸 ", IT: " 🇮🇹 ", JO: " 🇯🇴 ", JP: " 🇯🇵 ", KW: " 🇰🇼 ", KZ: " 🇰🇿 ", LB: " 🇱🇧 ", LI: " 🇱🇮 ", LT: " 🇱🇹 ", LU: " 🇱🇺 ", LV: " 🇱🇻 ", LY: " 🇱🇾 ", MA: " 🇲🇦 ", MC: " 🇲🇨 ", MD: " 🇲🇩 ", ME: " 🇲🇪 ", MG: " 🇲🇬 ", MK: " 🇲🇰 ", MT: " 🇲🇹 ", MX: " 🇲🇽 ", MY: " 🇲🇾 ", NL: " 🇳🇱 ", NO: " 🇳🇴 ", NZ: " 🇳🇿 ", OM: " 🇴🇲 ", PK: " 🇵🇰 ", PL: " 🇵🇱 ", PT: " 🇵🇹 ", QA: " 🇶🇦 ", RO: " 🇷🇴 ", RS: " 🇷🇸 ", RU: " 🇷🇺 ", SA: " 🇸🇦 ", SE: " 🇸🇪 ", SG: " 🇸🇬 ", SI: " 🇸🇮 ", SK: " 🇸🇰 ", SM: " 🇸🇲 ", TN: " 🇹🇳 ", TR: " 🇹🇷 ", UA: " 🇺🇦 ", US: " 🇺🇸 ",
-                    }[countryCode] || "";
 
-                    if (offer.IBAN == "FR123") {
-                        kyc = "  ✅ KYC Verified"
-                    } else if (offer.IBAN == "US123") {
-                        kyc = "  ✅ KYC Verified"
+
+                    if (chainId == 0x1ecf) {
+                        console.log("We are on Kinto")
+
+                        const seller = "0x139E312fCD4c35302a8d80a404d54a145A3a1c19" //offer.seller;
+                        let isSellerKYCed = await kycContract.isKYC(seller);
+                        console.log(isSellerKYCed)
+                        kyc = isSellerKYCed ? "✅ KYC Verified" : "⚠️ No KYC"
+                        let countryCode = await kycContract.getCountry(seller);
+                        country = countryCode == 250 ? "🇫🇷" : "";
+                        console.log(countryCode)
                     } else {
-                        kyc = "⚠️ No KYC";
-                    }
-                }
+                        // Put the approrpiate flag depending on the first two letters of the iban
+                        const countryCode = seller.IBAN.substring(0, 2).toUpperCase();
+                        country = {
+                            AE: " 🇦🇪 ", AL: " 🇦🇱 ", AD: " 🇦🇩 ", AT: " 🇦🇹 ", BY: " 🇧🇾 ", BE: " 🇧🇪 ", BA: " 🇧🇦 ", BG: " 🇧🇬 ", BH: " 🇧🇭 ", BR: " 🇧🇷 ", BN: " 🇧🇳 ", CA: " 🇨🇦 ", CH: " 🇨🇭 ", CN: " 🇨🇳 ", CY: " 🇨🇾 ", CZ: " 🇨🇿 ", DE: " 🇩🇪 ", DK: " 🇩🇰 ", DO: " 🇩🇴 ", EE: " 🇪🇪 ", EG: " 🇪🇬 ", ES: " 🇪🇸 ", FI: " 🇫🇮 ", FR: " 🇫🇷 ", GB: " 🇬🇧 ", GE: " 🇬🇪 ", GI: " 🇬🇮 ", GR: " 🇬🇷 ", HR: " 🇭🇷 ", HU: " 🇭🇺 ", IE: " 🇮🇪 ", IL: " 🇮🇱 ", IN: " 🇮🇳 ", IS: " 🇮🇸 ", IT: " 🇮🇹 ", JO: " 🇯🇴 ", JP: " 🇯🇵 ", KW: " 🇰🇼 ", KZ: " 🇰🇿 ", LB: " 🇱🇧 ", LI: " 🇱🇮 ", LT: " 🇱🇹 ", LU: " 🇱🇺 ", LV: " 🇱🇻 ", LY: " 🇱🇾 ", MA: " 🇲🇦 ", MC: " 🇲🇨 ", MD: " 🇲🇩 ", ME: " 🇲🇪 ", MG: " 🇲🇬 ", MK: " 🇲🇰 ", MT: " 🇲🇹 ", MX: " 🇲🇽 ", MY: " 🇲🇾 ", NL: " 🇳🇱 ", NO: " 🇳🇴 ", NZ: " 🇳🇿 ", OM: " 🇴🇲 ", PK: " 🇵🇰 ", PL: " 🇵🇱 ", PT: " 🇵🇹 ", QA: " 🇶🇦 ", RO: " 🇷🇴 ", RS: " 🇷🇸 ", RU: " 🇷🇺 ", SA: " 🇸🇦 ", SE: " 🇸🇪 ", SG: " 🇸🇬 ", SI: " 🇸🇮 ", SK: " 🇸🇰 ", SM: " 🇸🇲 ", TN: " 🇹🇳 ", TR: " 🇹🇷 ", UA: " 🇺🇦 ", US: " 🇺🇸 ",
+                        }[countryCode] || "";
 
-                const offerElement = createOfferElement(i, offer, kyc, country);
-                offersList.appendChild(offerElement);
+                        if (seller.IBAN == "FR123") {
+                            kyc = "  ✅ KYC Verified"
+                        } else if (seller.IBAN == "US123") {
+                            kyc = "  ✅ KYC Verified"
+                        } else {
+                            kyc = "⚠️ No KYC";
+                        }
+                    }
+
+                    const offerElement = createOfferElement(i, offer, seller, kyc, country);
+                    offersList.appendChild(offerElement);
+                    offers.push({
+                        id: i,
+                        offer,
+                        seller,
+                        kyc,
+                        country
+                    });
+
+                }
             }
         }
+        console.log({ offers })
     } catch (error) {
         console.error('Error loading offers:', error);
     } finally {
@@ -196,7 +241,7 @@ async function loadPayments() {
                     <td>${h.name}</td>
                     <td style="color: ${h.type === "endUser" ? 'green' : 'orange'}">${h.type}</td>
                     <td>${h.available}</td>
-                    <td>${h.amount - h.available ? `<span style="color: red; font-weight: bold">${h.amount - h.available}</span>` : 0}</td>
+                    <td>${h.amount - h.available ? `<span style="color: red; font-weight: bold">${(h.amount - h.available).toFixed(2)}</span>` : 0}</td>
                     <td style="color: gray">${h.id}</td>
                 `;
                 tbody.appendChild(row);
@@ -216,8 +261,8 @@ async function loadPayments() {
 }
 
 // Create offer element
-function createOfferElement(id, offer, kyc, country) {
-    const div = document.createElement('div');
+function createOfferElement(id, offer, seller, kyc, country) {
+    const div = document.createElement('article');
     div.className = 'offer-card';
 
     const isLocked = offer.lockUntil > Date.now() / 1000;
@@ -226,25 +271,23 @@ function createOfferElement(id, offer, kyc, country) {
     div.innerHTML = `
     <h4>Offer #${id}</h4>
     <div class="row">
-        <div class="column column-75">
-            <p>Amount: ${ethers.formatUnits(offer.amount, 6)}0 USDC</p>
-            <p>IBAN:    ${offer.IBAN}   (${country})</p>
-            <p>Seller:  ${offer.seller.slice(0, 12)}...  &emsp; ${kyc} </p>
-        </div>
-        <div class="column centered">
+      <div class="column column-75">
+        <p><strong>Amount:</strong> ${ethers.formatUnits(offer.amount, 6)}0 EURX</p>
+        <p><strong>Seller:</strong> ${seller.name}<br>
+        IBAN: ${seller.IBAN} (${country})<br>
+        Address: ${offer.seller.slice(0, 12)}... &nbsp; ${kyc}</p>
+      </div>
+      <div class="column centered">
             <p>
                 <span class="offer-status">${status}</span >
             </p>
-            <br><br>
-            ${!isLocked ? `<button onclick="signalIntend(${id})" class="button button-outline" style="bottom:1rem">Signal Intent</button>
-                <button onclick="reservationInterface(${id})" class="button button-outline" style="bottom:1rem">D€ Reservation</button>
-                
-            ` : ''}
-            
-        </div>
+            <br>
+            ${!isLocked ? `<button onclick="signalIntend(${id})" class="button button-outline" style="bottom:1rem">Signal Intent</button>` : ''}
+                <button onclick="reservationInterface(${id})" class="button button-outline" style="bottom:1rem">D€ Reservation</button>    
+     
+      </div>
     </div>
-
-    `;
+  `;
     return div;
 }
 
@@ -263,48 +306,41 @@ async function signalIntend(offerId) {
 }
 
 // Make reservation for an offer
-let rsvId = ''; // Memory storage for subsequent calls
+let reservation = {}; // Memory storage for subsequent calls
 
 async function reservationInterface(offerId) {
     try {
-        const dialogHtml = `
-            <form method="dialog" style="text-align: right"><button id="close-btn" title="Close" type="button">✕</button></form>
-            <h2>D€ Reservation</h2>
-            <p> Use the D€ to reserve and pay for the offer</p>
-            <p>Enter your name:</p>
-            <input type="text" id="user-name" />
-            <div>
-                <button id="reserve-btn" type="button" class="button">Make Reservation (d€)<span id="rsv-btn-status"></span></button>
-                <button id="intend-btn" type="button" class="button" disabled>Signal Intent (onchain)<span id="intend-btn-status"></span></button>
-            </div>
-            <button id="finalize-btn" type="button" class="button" disabled>
-                Finalize transaction (d€ & onchain)
-                <span id="finalize-btn-status"></span>
-            </button>
-        `
-        let fromName = ''
-        let toName = 'Charles'// should come from the offer, but we simplify for the moment
-        const dialog = createDialog(dialogHtml);
+        console.log(offers)
+        const dialog = document.getElementById('reservation-dialog');
+        let fromName = currentUser?.name || "Alice";
+        let toName = offers.find(o => o.id === offerId).seller.name || 'Charles'// should come from the offer, but we simplify for the moment
+        dialog.showModal();
         // Close dialog when clicking the ✕ icon
         dialog.querySelector('#close-btn').addEventListener('click', () => dialog.close());
 
         // Cache buttons & status spans
         const [reserveBtn, intendBtn, finalizeBtn] = ['#reserve-btn', '#intend-btn', '#finalize-btn'].map(id => dialog.querySelector(id));
-        const [rsvStatus, intendStatus, finalizeStatus] = ['#rsv-btn-status', '#intend-btn-status', '#finalize-btn-status'].map(id => dialog.querySelector(id));
-        const userNameForm = dialog.querySelector('#user-name');
+        const [rsvStatus, intendStatus, finalizeStatus] = ['#reserve-btn-status', '#intend-btn-status', '#finalize-btn-status'].map(id => dialog.querySelector(id));
+        const [reservationInfos, intendInfos] = ['#reservation-infos', '#intend-infos'].map(id => dialog.querySelector(id));
+        rsvStatus.innerHTML = ''
+        intendStatus.innerHTML = ''
+        finalizeStatus.innerHTML = ''
+        reservationInfos.textContent = ''
+        intendInfos.textContent = ''
+        reserveBtn.disabled = false;
+
         reserveBtn
             .addEventListener('click', async () => {
                 rsvStatus.innerHTML = '<span class="spinner"></span>'
                 try {
-                    const userName = userNameForm.value;
-                    fromName = userName || "Alice";
-                    toName = "Charles";
-                    rsvId = await makeReservation(fromName, toName, offerId);
-                    if (rsvId) {
-                        notification(`Reservation from ${fromName} to ${toName}: ${rsvId}`, 'success');
+                    console.log('Reservation from', fromName, 'to', toName, 'for offer', offerId)
+                    reservation = await makeReservation(fromName, toName, offerId);
+                    if (reservation.rsvId) {
+                        notification(`Reservation from ${fromName} to ${toName}: ${reservation.rsvId}`, 'success');
                         rsvStatus.innerHTML = ' ✅';
                         reserveBtn.disabled = true;
                         intendBtn.disabled = false;
+                        reservationInfos.textContent = `${reservation.amount} from ${fromName} reserved to ${toName}`
                     }
                 } catch (err) {
                     console.error('Reservation error:', err);
@@ -322,6 +358,8 @@ async function reservationInterface(offerId) {
                         intendStatus.innerHTML = ' ✅';
                         intendBtn.disabled = true;
                         finalizeBtn.disabled = false;
+                        intendInfos.textContent = `Offer n°${offerId} locked`
+
                     }
                 } catch (err) {
                     console.error('Signal intent error:', err);
@@ -330,9 +368,11 @@ async function reservationInterface(offerId) {
             });
         finalizeBtn
             .addEventListener('click', async () => {
+                // prevent multiple clicks leading to duplicate payments
+                finalizeBtn.disabled = true;
                 finalizeStatus.innerHTML = '<span class="spinner"></span>'
                 try {
-                    const result = await finalize(offerId, rsvId);
+                    const result = await finalize(offerId, reservation.rsvId);
                     const { paymentId, txHash } = result;
                     finalizeStatus.innerHTML = '✅✅';
                     finalizeBtn.disabled = true;
@@ -349,6 +389,7 @@ async function reservationInterface(offerId) {
 
                 } catch (err) {
                     console.error('Finalize interface error:', err);
+                    // keep button disabled to avoid retry on executed reservation
                 }
             });
 
@@ -358,18 +399,10 @@ async function reservationInterface(offerId) {
     }
 }
 
-function createDialog(html) {
-    const dialog = document.createElement('dialog');
-    dialog.innerHTML = html;
-    document.body.appendChild(dialog);
-    dialog.showModal();
-    return dialog;
-}
-
-
-
 async function makeReservation(fromName, toName, offerId) {
-    const offer = await nagaexContract.offers(offerId);
+    // find offer with corresponding id
+    const offer = offers.find(o => o.id === offerId).offer//  await nagaexContract.offers(offerId);
+    console.log('Offer:', offer);
     const amount = ethers.formatUnits(offer.amount, 6)
     const payload = { fromName, toName, amount };
     try {
@@ -387,7 +420,7 @@ async function makeReservation(fromName, toName, offerId) {
             throw new Error("Could not get an reservation ID")
         }
         console.log('Reservation ID:', data.rsvID);
-        return data.rsvID;
+        return { fromName, toName, amount, rsvId: data.rsvID }
     } catch (err) {
         console.error('makeReservation error:', err);
         notification(`Reservation failed: ${err.message}`, 'error');
@@ -455,7 +488,7 @@ async function createOffer(event) {
 
     try {
         // TODO : take into account the address in case it is not the user address. 
-        const tx = await nagaexContract.makeOffer(amountInWei, iban);
+        const tx = await nagaexContract.makeOffer(amountInWei);
         await tx.wait();
         const txHash = tx.hash;
         const blockscoutLink = `https://blockscout.com/tx/${txHash}`;
@@ -598,7 +631,7 @@ function setupEventListeners() {
     document.getElementById('process-button').addEventListener('click', processOffer);
 
     // Contract event listeners...
-    nagaexContract.on('OfferMade', (offerId, amount, iban, user) => {
+    nagaexContract.on('OfferMade', (offerId) => {
         if (currentPage === 'browse') loadOffers();
     });
 

@@ -27,10 +27,9 @@ export function serve() {
     app.use(bodyParser())
     const router = new Router()
 
-    // serve html page in ../frontend
-
     app.use(serveStatic('../frontend/'))
-    // reload page when ../frontend change, like liveserver
+    console.log(chalk.green('Webpage served http://127.0.0.1:3000/'))
+
     app.use(async (ctx, next) => {
         ctx.set('Cache-Control', 'no-cache, no-store, must-revalidate')
         ctx.set('Pragma', 'no-cache')
@@ -96,19 +95,19 @@ export function serve() {
         // ctx.body = await desp.getPayment(paymentId)
     })
     app.use(router.routes()).use(router.allowedMethods())
-    app.listen(3000, () => console.log('Server started on port 3000'))
+    app.listen(3000, () => console.log(chalk.green('Server started on port 3000')))
 }
 
 // constants
 const NAGAEX_ADDRESS = "0xA9E1a01Df3a691d00581297F37dE279120996BC3";
 const USDC_ADDRESS = "0x14e195D27FFF5F4A1139CB7f6e0F5712F8d420B4";
 const NAGAEX_ABI = [
-    "function makeOffer(uint amount, string memory IBAN) public",
+    "function makeOffer(uint amount) public",
     "function signalIntend(uint offerID) public",
-    "function offers(uint) public view returns (uint amount, string memory IBAN, address seller, uint lockUntil, address bider)",
+    "function offers(uint) public view returns (uint amount, address seller, uint lockUntil, address bider)",
     "function offerCounter() public view returns (uint)",
     "function unlockFunds (uint offerID) public",
-    "event OfferMade(uint offerID, uint amount, string IBAN, address user)",
+    "event OfferMade(uint offerID, uint amount, address user)",
     "event OfferLocked(uint offerID, address user)"
 ];
 
@@ -176,6 +175,11 @@ function screeningParameters(addressToScreen) {
     }
 }
 
+function displayUsers() {
+    const users = JSON.parse(fs.readFileSync('../frontend/user-ids.json', 'utf8'));
+    console.log('Users:');
+    users.forEach(user => console.log(`${user.name} \n ${user.dEid} ${user.address} ${user.IBAN}`));
+}
 // Akave
 
 // const API_BASE_URL = 'http://localhost:8000';
@@ -267,31 +271,77 @@ async function execution(offerID) {
 
 }
 
+async function createOffer(offer, contractSigner) {
+    const tx = await contractSigner.makeOffer(offer.amount);
+    await tx.wait();
+    console.log(`📄 Offer created: ${offer.amount} for ${offer.seller}`);
+}
+
+async function pathGuesser() {
+    // used during developement to find the correct method to retrieve metamask/rabby derived wallet.
+    displayUsers()
+    const aliceWallet = ethers.HDNodeWallet.fromPhrase(process.env.SEED)
+    const path0 = "44'/60'/0'/0/0"
+    const path1 = "44'/60'/0'/0/1"
+    const path2 = "44'/60'/0'/1/0"
+    const path3 = "44'/60'/1'/0/0"
+
+
+    console.log("Alice \t\t", aliceWallet.address);
+    const mnemonic = aliceWallet.mnemonic
+
+    console.log("mnemo", mnemonic)
+    console.log("From Mnemo path0", ethers.HDNodeWallet.fromMnemonic(mnemonic, path0).address)
+    console.log("From Mnemo path1", ethers.HDNodeWallet.fromMnemonic(mnemonic, path1).address) // Victory!
+    console.log("From Mnemo path2", ethers.HDNodeWallet.fromMnemonic(mnemonic, path2).address)
+    console.log("From Mnemo path3", ethers.HDNodeWallet.fromMnemonic(mnemonic, path3).address)
+
+    console.log("Derived child\t", aliceWallet.deriveChild(0).address)
+    console.log("Derived child\t", aliceWallet.deriveChild(1).address)
+    console.log("Derived child\t", aliceWallet.deriveChild(2).address)
+    console.log("Derived child\t", aliceWallet.deriveChild(3).address)
+
+    console.log("Derived path '0'", aliceWallet.derivePath("0").address)
+
+    console.log("Derived path0\t", aliceWallet.derivePath(path0).address)
+    console.log("Derived path1\t", aliceWallet.derivePath(path1).address)
+    console.log("Derived path2\t", aliceWallet.derivePath(path2).address)
+    console.log("Derived path3\t", aliceWallet.derivePath(path3).address)
+
+    const pathM0 = `m/44'/60'/0'/0/0`
+    const pathM1 = `m/44'/60'/0'/0/1`
+
+    console.log("From seed with PathM0", ethers.HDNodeWallet.fromPhrase(process.env.SEED, pathM0).address)
+    console.log("From seed with PathM1", ethers.HDNodeWallet.fromPhrase(process.env.SEED, pathM1).address)
+
+    console.log("From seed with Path0", ethers.HDNodeWallet.fromPhrase(process.env.SEED, path0).address)
+    console.log("From seed with Path1", ethers.HDNodeWallet.fromPhrase(process.env.SEED, path1).address)
+    console.log("From seed with Path2", ethers.HDNodeWallet.fromPhrase(process.env.SEED, path2).address)
+}
+
 
 async function mockOffers() {
-    const provider = new ethers.getDefaultProvider("http://localhost:8545/");
-    const contract = new ethers.Contract(NAGAEX_ADDRESS, NAGAEX_ABI, provider);
-    const userWallet = ethers.Wallet.fromPhrase(process.env.SEED, provider);
-    const contractWithSigner = new ethers.Contract(NAGAEX_ADDRESS, NAGAEX_ABI, userWallet);
+    // const provider = new ethers.getDefaultProvider("http://localhost:8545/");
+    const provider = new ethers.JsonRpcProvider("http://localhost:8545/");
+    displayUsers()
+    const aliceWallet = ethers.HDNodeWallet.fromPhrase(process.env.SEED).connect(provider);
+    const mnemonic = aliceWallet.mnemonic
 
+    const path1 = "44'/60'/0'/0/1"
+    const path2 = "44'/60'/0'/0/2"
+    const path3 = "44'/60'/0'/0/3"
 
-    // this scenario will create two offers
-    let offer = { amount: 1900000, IBAN: 'ES12345', seller: 'Charles' }
-    const tx1 = await contractWithSigner.makeOffer(offer.amount, offer.IBAN);
-    await tx1.wait();
-    console.log(`📄 Offer created: ${offer.amount} for ${offer.IBAN}`);
+    const bobWallet = ethers.HDNodeWallet.fromMnemonic(mnemonic, path1).connect(provider);
+    const charlesWallet = ethers.HDNodeWallet.fromMnemonic(mnemonic, path2).connect(provider);
+    const deniseWallet = ethers.HDNodeWallet.fromMnemonic(mnemonic, path3).connect(provider);
+    console.log("Retrieved Charles", charlesWallet.address);
+    console.log("Retrieved Denise", deniseWallet.address);
 
-
-    let offer2 = { amount: 50000000, IBAN: 'BE12345', seller: 'Charles' }
-    const tx2 = await contractWithSigner.makeOffer(offer2.amount, offer2.IBAN);
-    await tx2.wait();
-    console.log(`📄 Offer created: ${offer2.amount} for ${offer2.IBAN}`);
-
-
-    let offer3 = { amount: 25000000, IBAN: 'FR12345', seller: 'Charles' }
-    const tx3 = await contractWithSigner.makeOffer(offer3.amount, offer3.IBAN);
-    await tx3.wait();
-    console.log(`📄 Offer created: ${offer3.amount} for ${offer3.IBAN}`);
+    const contractWithSignerCharles = new ethers.Contract(NAGAEX_ADDRESS, NAGAEX_ABI, charlesWallet);
+    const contractWithSignerDenise = new ethers.Contract(NAGAEX_ADDRESS, NAGAEX_ABI, deniseWallet);
+    createOffer({ amount: 50000000, seller: 'Denise' }, contractWithSignerDenise)
+    await createOffer({ amount: 1900000, seller: 'Charles' }, contractWithSignerCharles) // we need to wait for one Charles transaction to avoid nonce errors
+    createOffer({ amount: 25000000, seller: 'Charles' }, contractWithSignerCharles)
 }
 
 // Run the execution
@@ -318,7 +368,9 @@ async function main() {
     const args = process.argv.slice(2);
     if (args.length === 0) {
         usage();
-        process.exit(0);
+        console.log(chalk.blue('\nUsing default: Serve'))
+        serve();
+        // process.exit(0);
     }
     const [resource, action, ...rest] = args;
     switch (resource) {
