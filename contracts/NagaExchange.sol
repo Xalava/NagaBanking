@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract NagaExchange is Ownable {
-    IERC20 public USDC;
+    IERC20 public stable;
     // IERC20 public USDNaga;
     uint public offerCounter;
     uint constant lockTime = 6 hours;
@@ -27,17 +27,17 @@ contract NagaExchange is Ownable {
     event OfferLocked(uint offerID, address user);
     event FundsUnlocked(uint offerID, address user);
 
-    constructor(address _usdcAddress) Ownable(msg.sender) {
-        USDC = IERC20(_usdcAddress);
+    constructor(address _stablecoinAddress) Ownable(msg.sender) {
+        stable = IERC20(_stablecoinAddress);
 
         whitelist[msg.sender] = true;
     }
 
     function makeOffer(uint amount) public {
-        // require(
-        //     USDC.transferFrom(msg.sender, address(this), amount),
-        //     "Transfer failed"
-        // );
+        require(
+            stable.transferFrom(msg.sender, address(this), amount),
+            "Transfer failed"
+        );
 
         offerCounter++;
         offers[offerCounter] = Offer({
@@ -67,7 +67,7 @@ contract NagaExchange is Ownable {
         Offer storage offer = offers[offerID];
         require(offer.seller != address(0), "Offer does not exist");
         // Not necessary :      // offer.lockUntil = 0;
-        // USDC.transfer(offer.bider, offer.amount);
+        stable.transfer(offer.bider, offer.amount);
         offer.seller = address(0); // Voids the offer
         emit FundsUnlocked(offerID, offer.bider);
     }
