@@ -119,7 +119,8 @@ async function notification(message, type = 'info') {
     const notificationElement = document.getElementById('notification');
 
     // Remove existing visible class if any
-    notificationElement.classList.remove('visible');
+    notificationElement.className = "";
+
 
     // Force a reflow to restart animation
     void notificationElement.offsetWidth;
@@ -294,7 +295,8 @@ function createOfferElement(id, offer, seller, kyc, country) {
 // Signal intent for an offer
 async function signalIntend(offerId) {
     try {
-        const tx = await nagaexContract.signalIntend(offerId);
+        const nonce = await signer.getNonce()
+        const tx = await nagaexContract.signalIntend(offerId, { nonce });
         await tx.wait();
         await loadOffers();
         return true
@@ -378,7 +380,7 @@ async function reservationInterface(offerId) {
                     finalizeBtn.disabled = true;
                     const link = `https://blockscout.com/tx/${txHash}`;
 
-                    notification(`D€ paiement from reservation done (id: ${paymentId}) and settled onchain (tx: <a link="${link}"> ${txHash.slice(0, 10)}...</a>)`, 'success');
+                    notification(`Offer ${offerId} finalized: \n- D€ Paiement from reservation (id: ${paymentId}) \n- Settled onchain (tx: <a link="${link}"> ${txHash.slice(0, 10)}</a>)`, 'success');
 
                     // notification(`Offer n°${offerId} finalised`, 'success');
                     setTimeout(() => {
