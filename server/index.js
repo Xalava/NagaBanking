@@ -1,10 +1,7 @@
 import { promises as pfs } from 'fs';
 import xml2js from 'xml2js';
 import { ethers } from 'ethers';
-import axios from "axios";
-import FormData from 'form-data';
 import fs from 'fs';
-import fetch from 'node-fetch'
 import chalk from 'chalk'
 import * as desp from './DESP/interact.js'
 // initialize DESP module for API interactions
@@ -13,7 +10,6 @@ desp.init();
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
-dotenv.config({ path: './DESP/.env' });
 // Koa framework imports
 import Koa from 'koa'
 import Router from '@koa/router'
@@ -30,6 +26,7 @@ export function serve() {
     app.use(serveStatic('../frontend/'))
     console.log(chalk.green('Webpage served http://127.0.0.1:3000/'))
 
+    // set no-cache for quick dev refreshes
     app.use(async (ctx, next) => {
         ctx.set('Cache-Control', 'no-cache, no-store, must-revalidate')
         ctx.set('Pragma', 'no-cache')
@@ -37,19 +34,15 @@ export function serve() {
         await next()
     })
 
-
     router.get('/mockoffers', async ctx => {
         await mockOffers()
         ctx.body = 'Mock offers created'
     })
     router.get('/info', async ctx => {
-        const infoData = await desp.fetchApiData('info')
-        desp.displayResults(infoData)
-        ctx.body = infoData
+        ctx.body = await desp.getInfo()
     })
     router.get('/holdings', async ctx => {
-        const holdings = await desp.getHoldings()
-        ctx.body = holdings
+        ctx.body = await desp.getHoldings()
     })
     // router.get('/reserve', async ctx => {
 
@@ -81,18 +74,25 @@ export function serve() {
         }
     })
     router.post('/pay', async ctx => {
-        // retrieve offer
-        const { offerId, rsvId, amount } = ctx.request.body;
+        try {
+            // retrieve offer
+            const { offerId, rsvId, amount } = ctx.request.body;
 
-        console.log(`API: Paying offer ${offerId} with reservation ${rsvId} for ${amount}`)
-        const paymentId = await desp.createPayment(rsvId, amount);
+            console.log(`API: Paying offer ${offerId} with reservation ${rsvId} for ${amount}`)
+            const paymentId = await desp.createPayment(rsvId, amount);
 
-        console.log(`payment ${paymentId} created`)
-        let txHash = await triggerSmartContract(paymentId, offerId)
-        console.log(`payment ${paymentId} triggered`)
-        ctx.body = { paymentId, txHash };
-        // await desp.getPayment(paymentId)
-        // ctx.body = await desp.getPayment(paymentId)
+            console.log(`payment ${paymentId} created`)
+            let txHash = await triggerSmartContract(paymentId, offerId)
+            console.log(`payment ${paymentId} triggered`)
+            ctx.body = { paymentId, txHash };
+            // await desp.getPayment(paymentId)
+            // ctx.body = await desp.getPayment(paymentId)
+
+        } catch (err) {
+            console.error('Payment error:', err);
+            ctx.status = 500;
+            ctx.body = { error: err.message };
+        }
     })
     app.use(router.routes()).use(router.allowedMethods())
     app.listen(3000, () => console.log(chalk.green('Server started on port 3000')))
@@ -375,7 +375,7 @@ async function main() {
     const [resource, action, ...rest] = args;
     switch (resource) {
         case 'serve':
-            let info2 = await desp.fetchApiData('info');
+            let info2 = await desp.getInfo()
             desp.displayResults(info2);
             serve();
             break;
@@ -383,7 +383,7 @@ async function main() {
             await mockOffers();
             break;
         case 'info':
-            let info = await desp.fetchApiData('info');
+            let info = await desp.getInfo()
             desp.displayResults(info);
             break;
         case 'holdings':

@@ -4,95 +4,57 @@ import chalk from 'chalk'
 import Table from 'cli-table3'
 import fs from 'fs'
 import path from 'path'
-import { create } from 'domain'
 
-let USER, PASSWORD, BASEURL = null
+let api // local object to make the API calls
 // Load environment variables from .env file
+dotenv.config({ path: path.join(process.cwd(), 'DESP/.env') })
+// File to store known IDs
+const KNOWN_IDS_FILE = path.join(process.cwd(), 'DESP/ids.json')
+let KNOWN_IDS = {}
 export function init() {
-    dotenv.config({ path: path.join(process.cwd(), 'DESP/.env') })
-    USER = process.env.API_USER
-    PASSWORD = process.env.API_PASSWORD
-    BASEURL = process.env.API_BASEURL
+    const USER = process.env.API_USER
+    const PASSWORD = process.env.API_PASSWORD
+    const BASEURL = process.env.API_BASEURL
     // load known IDs for name lookup
     loadKnownIDs()
     if (!USER || !PASSWORD || !BASEURL) {
-        console.error(chalk.red('Error: API_(USER,PASSWORD,BASURL) must be defined in .env file'))
+        console.error(chalk.red('Error: API_(USER,PASSWORD,BASEURL) must be defined in .env file'))
         process.exit(1)
     }
-}
-
-export async function fetchApiData(word, params = {}) {
-    try {
-        // Configure the request with authentication
-        const response = await axios.get(BASEURL + word, {
-            auth: {
-                username: USER,
-                password: PASSWORD
-            },
-            params: params
-        })
-
-        return response.data
-    } catch (error) {
-        if (error.response) {
-            // The request was made and the server responded with a status code
-            console.error(chalk.red(`Error: ${error.response.status} - ${error.response.statusText}`))
-            console.error(chalk.yellow('Response data:'), error.response.data)
-        } else if (error.request) {
-            // The request was made but no response was received
-            console.error(chalk.red('Error: No response received from API'))
-        } else {
-            // Something happened in setting up the request that triggered an Error
-            console.error(chalk.red(`Error: ${error.message}`))
-        }
-        process.exit(1)
-    }
-}
-
-export async function postApiData(endpoint, data) {
-    try {
-        // Configure the request with authentication
-        const response = await axios.post(BASEURL + endpoint, data, {
-            auth: {
-                username: USER,
-                password: PASSWORD
+    api = axios.create({
+        baseURL: BASEURL,
+        auth: {
+            username: USER,
+            password: PASSWORD
+        },
+        headers: { Accept: 'application/json' },
+        timeout: 10_000,
+    })
+    // Error management
+    api.interceptors.response.use(
+        res => res.data,
+        err => {
+            const { response } = err;
+            if (response) {
+                console.error(chalk.red(
+                    `[DESP] ${response.status} – ${response.statusText}`
+                ));
+                console.error(JSON.stringify(response.data, null, 2));
+            } else {
+                console.error(chalk.red(err.message));
             }
-        })
-
-        return response.data
-    } catch (error) {
-        if (error.response) {
-            // The request was made and the server responded with a status code
-            console.error(chalk.red(`Error: ${error.response.status} - ${error.response.statusText}`))
-            console.error(chalk.yellow('Response data:'), error.response.data)
-        } else if (error.request) {
-            // The request was made but no response was received
-            console.error(chalk.red('Error: No response received from API'))
-        } else {
-            // Something happened in setting up the request that triggered an Error
-            console.error(chalk.red(`Error: ${error.message}`))
+            throw err;
         }
-        process.exit(1)
-    }
+    );
+    console.log(
+        chalk.cyanBright('[DESP] client initialised →'),
+        chalk.gray(BASEURL)
+    )
 }
 
-export async function putApiData(endpoint, data) {
-    try {
-        const response = await axios.put(BASEURL + endpoint, data, {
-            auth: { username: USER, password: PASSWORD }
-        });
-        return response.data;
-    } catch (error) {
-        if (error.response) {
-            console.error(chalk.red(`Error: ${error.response.status} - ${error.response.statusText}`));
-            console.error(chalk.yellow('Response data:'), error.response.data);
-        } else if (error.request) {
-            console.error(chalk.red('Error: No response received from API'));
-        } else {
-            console.error(chalk.red(`Error: ${error.message}`));
-        }
-        process.exit(1);
-    }
+
+export function getInfo() {
+    return api.get('info')
 }
 
 export function displayResults(data) {
@@ -133,9 +95,7 @@ export function generateUUID() {
     })
 }
 
-// File to store known IDs
-const KNOWN_IDS_FILE = path.join(process.cwd(), 'DESP/ids.json')
-let KNOWN_IDS = {}
+
 export function loadKnownIDs() {
     // Load existing known IDs from file or initialize with defaults
     try {
@@ -162,7 +122,7 @@ export async function createHolding(holdingType, name = null) {
     }
 
     console.log(chalk.blue.bold(`Creating new ${holdingType} holding, UUID: ${uuid}`))
-    let data = await postApiData('holdings', requestData)
+    let data = await api.post('holdings', requestData)
     displayResults(data)
 
     // If name is provided, save the ID to the known IDs
@@ -193,23 +153,35 @@ export function getIdByName(name) {
 }
 
 export async function getHoldings() {
-    const listHoldings = await fetchApiData("holdings")
-    let holdings = {}
-    for (const holding of listHoldings.items) {
-        const uuid = holding.entry
-        const holdingDetails = await fetchApiData(`holdings/${uuid}`)
-        // determine key: use name if known, otherwise use UUID
-        const name = getNameById(uuid)
-        // const key = name !== 'Unknown' ? name : uuid
-        holdings[uuid] = {
-            id: uuid,
-            name: name,
-            amount: holdingDetails.balance.amount.amount,
-            available: holdingDetails.balance.availableAmount.amount,
-            type: holdingDetails.holdingType,
+    try {
+        const listHoldings = await api.get("holdings")
+        let holdings = {}
+        for (const holding of listHoldings.items) {
+            try {
+                const uuid = holding.entry
+                if (!uuid) continue
+
+                const holdingDetails = await api.get(`holdings/${uuid}`)
+                // determine key: use name if known, otherwise use UUID
+                const name = getNameById(uuid)
+                // const key = name !== 'Unknown' ? name : uuid
+                holdings[uuid] = {
+                    id: uuid,
+                    name: name,
+                    amount: holdingDetails.balance.amount.amount,
+                    available: holdingDetails.balance.availableAmount.amount,
+                    type: holdingDetails.holdingType,
+                }
+            } catch (err) {
+                console.error(chalk.red(`Error fetching details for holding: ${holding.entry}`), err.message)
+                // Continue with next holding even if one fails
+            }
         }
+        return holdings
+    } catch (err) {
+        console.error(chalk.red('Error in getHoldings:'), err.message)
+        throw err
     }
-    return holdings
 }
 
 export function displayHoldings(holdings) {
@@ -226,11 +198,11 @@ export function displayHoldings(holdings) {
 
     // Sort and add entries to table
     Object.keys(holdings)
-        .sort()
+        .sort((a, b) => holdings[a].name.localeCompare(holdings[b].name))
         .forEach(name => {
             const h = holdings[name];
             table.push([
-                name,
+                h.name,
                 h.type === "endUser" ? chalk.green(h.type) : chalk.yellow(h.type),
                 h.available,
                 h.amount - h.available ? chalk.red.bold(h.amount - h.available) : 0,
@@ -271,10 +243,10 @@ export async function createReservation(from, to, amount) {
     console.log(chalk.blue.bold(`Creating new reservation`))
     console.log(`  ${amount}€ ${from} → ${to}`)
     console.log(chalk.gray(`  Reservation id: ${rsvID}`))
-    const r1 = await postApiData("reservations/" + rsvID, requestData)
+    const r1 = await api.post("reservations/" + rsvID, requestData)
     // console.log(r1)
 
-    const r2 = await fetchApiData("reservations/" + rsvID)
+    const r2 = await api.get("reservations/" + rsvID)
     // console.log(r2)
     if (r2.reservationStatus === "ENAB") {
         console.log(chalk.green("  ✔️  Reservation active"))
@@ -298,9 +270,9 @@ export async function createPayment(rsvID, amount) {
         },
         reserveRemaining: false // we don't keep the reservation
     }
-    const payment = await postApiData("payments/" + paymentID, paymentRequestData)
+    const payment = await api.post("payments/" + paymentID, paymentRequestData)
     // console.log(payment)
-    const paymentDetails = await fetchApiData("payments/" + paymentID)
+    const paymentDetails = await api.get("payments/" + paymentID)
     // console.log(paymentDetails)
     if (paymentDetails.paymentStatus === "ACCC") {
         console.log(chalk.green("  ✔️  Payment accepted"))
@@ -313,13 +285,13 @@ export async function createPayment(rsvID, amount) {
 
 export async function listReservations(params = {}) {
     console.log(chalk.blue.bold('\nList Reservations'));
-    const data = await fetchApiData('reservations', params);
+    const data = await api.get('reservations', { params });
     displayResults(data);
 }
 
 export async function getReservationById(id) {
     console.log(chalk.blue.bold(`\nGet Reservation ${id}`));
-    const data = await fetchApiData('reservations/' + id);
+    const data = await api.get('reservations/' + id);
     displayResults(data);
 }
 
@@ -332,20 +304,20 @@ export async function updateReservation(id, amount, expiryHours) {
         requestData.expiryDate = expiryDate.toISOString();
     }
     console.log(chalk.blue.bold(`\nUpdate Reservation ${id}`));
-    const data = await putApiData('reservations/' + id, requestData);
+    const data = await api.post('reservations/' + id, requestData);
     displayResults(data);
 }
 
 export async function getPayment(paymentId) {
     console.log(chalk.blue.bold(`\nGet Payment ${paymentId}`));
-    const data = await fetchApiData('payments/' + paymentId);
+    const data = await api.get('payments/' + paymentId);
     displayResults(data);
 }
 
 export async function getHolding(nameOrId) {
     const id = KNOWN_IDS[nameOrId] || nameOrId;
     console.log(chalk.blue.bold(`\nGet Holding ${nameOrId} (${id})`));
-    const data = await fetchApiData('holdings/' + id);
+    const data = await api.get('holdings/' + id);
     displayResults(data);
 }
 

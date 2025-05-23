@@ -119,15 +119,14 @@ async function notification(message, type = 'info') {
     const notificationElement = document.getElementById('notification');
 
     // Remove existing visible class if any
-    notificationElement.className = "";
+    notificationElement.className = ` ${type} visible`
 
 
     // Force a reflow to restart animation
     void notificationElement.offsetWidth;
 
     notificationElement.innerHTML = message;
-    notificationElement.classList.add(type);
-    notificationElement.classList.add('visible');
+
 
     setTimeout(() => {
         notificationElement.classList.remove('visible');
@@ -378,9 +377,11 @@ async function reservationInterface(offerId) {
                     const { paymentId, txHash } = result;
                     finalizeStatus.innerHTML = '✅✅';
                     finalizeBtn.disabled = true;
-                    const link = `https://blockscout.com/tx/${txHash}`;
+                    const link = getExplorerUrl(txHash);
 
-                    notification(`Offer ${offerId} finalized: \n- D€ Paiement from reservation (id: ${paymentId}) \n- Settled onchain (tx: <a link="${link}"> ${txHash.slice(0, 10)}</a>)`, 'success');
+                    notification(`Offer ${offerId} finalized: 
+- D€ Paiement from reservation (id: ${paymentId}) 
+- Settled onchain (tx: <a href="${link}" target="_blank" rel="noopener noreferrer">${txHash.slice(0, 10)}</a>)`, 'success');
 
                     // notification(`Offer n°${offerId} finalised`, 'success');
                     setTimeout(() => {
@@ -493,8 +494,8 @@ async function createOffer(event) {
         const tx = await nagaexContract.makeOffer(amountInWei);
         await tx.wait();
         const txHash = tx.hash;
-        const blockscoutLink = `https://blockscout.com/tx/${txHash}`;
-        notification(`Offer created successfully! <a href=${blockscoutLink}> View transaction</a>`, 'success')
+        const link = getExplorerUrl(txHash);
+        notification(`Offer created successfully! <a href=${link}> View transaction</a>`, 'success')
         event.target.reset();
         showPage('browse');
     } catch (error) {
@@ -642,10 +643,25 @@ function setupEventListeners() {
     });
 }
 
+// Helper function to create explorer URL for a transaction
+function getExplorerUrl(txHash) {
+    if (!txHash) return '#';
+
+    if (chainId === '0x1') { // Ethereum Mainnet
+        return `https://etherscan.io/tx/${txHash}`;
+    } else if (chainId === '0x1ecf') { // Kinto
+        return `https://explorer.kinto.xyz/tx/${txHash}`;
+    } else if (chainId === '0x539' || chainId === '0x7a69') { // Local
+        return `https://custom-block-explorer.vercel.app/tx/${txHash}`;
+    }
+    return '#';
+}
+
 // Make functions globally available
 window.showPage = showPage;
 window.signalIntend = signalIntend;
 window.processOffer = processOffer;
+window.getExplorerUrl = getExplorerUrl;
 window.changeOffer = changeOffer;
 window.reservationInterface = reservationInterface;
 window.finalize = finalize;
