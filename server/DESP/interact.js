@@ -256,7 +256,35 @@ export async function createReservation(from, to, amount) {
     return rsvID
 }
 
-export async function createPayment(rsvID, amount) {
+export async function createPayment(from, to, amount) {
+    const paymentID = generateUUID()
+    console.log(chalk.blue.bold(`Creating payment`))
+    console.log(`  ${amount}€ ${from} → ${to}`)
+    console.log(chalk.gray(`  Payment id: ${paymentID}`))
+
+    const paymentRequestData = {
+        debtorEntry: holdings[from].id,
+        creditorEntry: holdings[to].id,
+        amount: {
+            amount: amount,
+            currency: 'EUR'
+        },
+        reserveRemaining: false // we don't keep the reservation
+    }
+    const payment = await api.post("payments/" + paymentID, paymentRequestData)
+    console.log(payment)
+    const paymentDetails = await api.get("payments/" + paymentID)
+    // console.log(paymentDetails)
+    if (paymentDetails.paymentStatus === "ACCC") {
+        console.log(chalk.green("  ✔️  Payment accepted"))
+        return paymentID
+    } else {
+        console.log(chalk.red("Payment not executed"))
+    }
+
+}
+
+export async function createPaymentFromReservation(rsvID, amount) {
     const paymentID = generateUUID()
     console.log(chalk.blue.bold(`Creating payment from reservation`))
     console.log(`  ${amount}€ payed from reservation ${rsvID}`)
@@ -271,7 +299,7 @@ export async function createPayment(rsvID, amount) {
         reserveRemaining: false // we don't keep the reservation
     }
     const payment = await api.post("payments/" + paymentID, paymentRequestData)
-    // console.log(payment)
+    console.log(payment)
     const paymentDetails = await api.get("payments/" + paymentID)
     // console.log(paymentDetails)
     if (paymentDetails.paymentStatus === "ACCC") {

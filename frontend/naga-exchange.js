@@ -440,7 +440,7 @@ async function finalize(offerId, rsvId) {
     // Send keys matching server expectations: offerId, rsvId
     const payload = { offerId, rsvId, amount };
     try {
-        const res = await fetch('/pay', {
+        const res = await fetch('/payFromReservation', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)

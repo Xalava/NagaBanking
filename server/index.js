@@ -44,17 +44,33 @@ export function serve() {
     router.get('/holdings', async ctx => {
         ctx.body = await desp.getHoldings()
     })
-    // router.get('/reserve', async ctx => {
 
-    //     //get fromName, toName and amount from the query
-    //     const fromName = ctx.query.fromName
-    //     const toName = ctx.query.toName
-    //     const amount = ctx.query.amount
+    router.post('/createHolding', async ctx => {
+        try {
+            const { holdingType, name } = ctx.request.body;
+            const holding = await desp.createHolding(holdingType, name);
+            ctx.body = holding;
+        } catch (err) {
+            console.error('Error creating holding:', err);
+            ctx.status = 500;
+            ctx.body = { error: err.message };
+        }
+    })
 
-    //     console.log(`creating reservation for ${fromName} to ${toName} for ${amount}`)
-    //     const rsvID = await desp.createReservation(fromName, toName, amount)
-    //     ctx.body = rsvID
-    // })
+    router.post('/payDeuro', async ctx => {
+        try {
+            const { fromName, toName, amount } = ctx.request.body;
+
+            await desp.createPayment(fromName, toName, amount)
+            ctx.body = 'Payment created'
+
+        } catch (err) {
+            console.error('Payment error:', err);
+            ctx.status = 500;
+            ctx.body = { error: err.message };
+        }
+    })
+
     router.post('/reserve', async ctx => {
         try {
             const { fromName, toName, amount } = ctx.request.body;
@@ -73,13 +89,14 @@ export function serve() {
             ctx.body = { error: err.message };
         }
     })
-    router.post('/pay', async ctx => {
+
+    router.post('/payFromReservation', async ctx => {
         try {
             // retrieve offer
             const { offerId, rsvId, amount } = ctx.request.body;
 
             console.log(`API: Paying offer ${offerId} with reservation ${rsvId} for ${amount}`)
-            const paymentId = await desp.createPayment(rsvId, amount);
+            const paymentId = await desp.createPaymentFromReservation(rsvId, amount);
 
             console.log(`payment ${paymentId} created`)
             let txHash = await triggerSmartContract(paymentId, offerId)
@@ -425,7 +442,7 @@ async function main() {
         case 'payments':
             if (action === 'create') {
                 const [rsvId, amt] = rest;
-                await desp.createPayment(rsvId, Number(amt));
+                await desp.createPaymentFromReservation(rsvId, Number(amt));
             } else if (action === 'get') {
                 const [paymentId] = rest;
                 await desp.getPayment(paymentId);
