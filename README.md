@@ -2,11 +2,17 @@
 
 Naga Banking is a suite facilitating bank operations when interacting with tokenized assets.
 
-*Example scenario:*
+Naga suports several scenarios:
+- Exchange of money received via SWIFT against a stablecoin
+- Atomic exchange digital euro vs Stablecoin, leveraging conditional payment capabilities
+- Payment wallet for digital Euro and stablecoins
 
-Alice, a seller of USDC, uses the interface to formulate an offer. Bob, the buyer, can check the offers, including the KYC information when available.
 
-When Bob pays Alice for a particular offer, Naga Banking can automatically verify the SWIFT message, associate it with the correct offer, screen the buyer's address, and trigger the USDC payment. 
+*Example Scenario*
+
+Alice, a seller of a stablecoin, uses the interface to formulate an offer. Bob, the buyer, can check the offers, including the KYC information when available.
+
+When Bob pays Alice for a particular offer, Naga Banking can automatically verify the SWIFT message, associate it with the correct offer, screen the buyer's address, and trigger the stablecoin payment. 
 
 ```mermaid
 sequenceDiagram
@@ -15,13 +21,13 @@ sequenceDiagram
    participant 🐍 Bank
    participant 👨‍🦲 Buyer
 
-   👩‍🦰 Seller->>📄 SmartContract: makeOffer (Lock USDC)
+   👩‍🦰 Seller->>📄 SmartContract: makeOffer (Lock stablecoin)
    👨‍🦲 Buyer->>📄 SmartContract: Signal interest
    👨‍🦲 Buyer->>🐍 Bank: Makes Payment
    🐍 Bank->>🐍 Bank: Verifies SWIFT message
    🐍 Bank->>🐍 Bank: Screens the buyer address
    🐍 Bank->>📄 SmartContract: Triggers the payment
-   📄 SmartContract->>👨‍🦲 Buyer: Receives USDC
+   📄 SmartContract->>👨‍🦲 Buyer: Receives stablecoin
    🐍 Bank->>👩‍🦰 Seller: Receives funds
 ```
 
@@ -92,16 +98,6 @@ npx hardhat ignition deploy ignition/modules/naga.js --network localhost --reset
 cd server && node index.js mockoffers && nodemon index.js serve ## or npm run serve
 ```
 
-### File storage
-
-```sh
-docker pull akave/akavelink:latest
-docker run -d \
-  -p 8000:3000 \
-  -e NODE_ADDRESS="connect.akave.ai:5500" \ 
-  -e PRIVATE_KEY="your_private_key" \
-  akave/akavelink:latest
-```
-
+[additonal documentation](Documentation.md)
 
 <img src="./frontend/naga-banking.png" alt="Naga Banking" width="100">
