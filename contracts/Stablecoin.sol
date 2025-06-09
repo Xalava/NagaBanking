@@ -13,6 +13,10 @@ contract Stablecoin is ERC20 {
         _mint(beneficiary, amount);
     }
 
+    function burn(address beneficiary, uint256 amount) public {
+        _burn(beneficiary, amount);
+    }
+
     function decimals() public view virtual override returns (uint8) {
         return 6;
     }
