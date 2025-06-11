@@ -1,30 +1,29 @@
-# Additional documentation
+# Naga Banking - Additional Documentation
 
-### Digital euro process
+## Digital Euro Atomic P2P
 
-Full diagram:
-
+### Complete Process Flow
 
 ```mermaid
 sequenceDiagram
    participant 👩‍🦰 Seller
    participant 📄 SmartContract
-   participant 🚀 Fintech
+   participant 🚀 Server
    participant 🏦 DigitalEuro
    participant 👨‍🦲 Buyer
 
-   👩‍🦰 Seller->>📄 SmartContract: Lock stateblecoin
+   👩‍🦰 Seller->>📄 SmartContract: Lock stablecoin
    👨‍🦲 Buyer->>📄 SmartContract: Signal interest
-   👨‍🦲 Buyer->>🚀 Fintech: Ask to make Reservation
-   🚀 Fintech->> 🏦 DigitalEuro: Makes reservation
-   🚀 Fintech->> 📄 SmartContract: Verifies availability
-   🚀 Fintech->>📄 SmartContract: Triggers the payment
-   🚀 Fintech->> 🏦 DigitalEuro: Triggers the payment
-   📄 SmartContract->>👨‍🦲 Buyer: Receives Stablecoin
-   🏦 DigitalEuro->>👩‍🦰 Seller: Receives funds
+   👨‍🦲 Buyer->>🚀 server: Request reservation
+   🚀 server->>🏦 DigitalEuro: Create reservation
+   🚀 server->>📄 SmartContract: Verify offer availability
+   🚀 server->>🏦 DigitalEuro: Trigger payment
+   🚀 server->>📄 SmartContract: Trigger unlock
+   📄 SmartContract->>👨‍🦲 Buyer: Transfer stablecoin
+   🏦 DigitalEuro->>👩‍🦰 Seller: Transfer digital euros
 ```
 
-Simplified version: 
+### Simplified diagram
 
 ```mermaid
 sequenceDiagram
@@ -33,21 +32,21 @@ sequenceDiagram
    participant 🏦 DigitalEuro
    participant 👨‍🦲 Buyer
 
-   👩‍🦰 Seller->>📄 SmartContract: Lock stateblecoin
-   👨‍🦲 Buyer->>🏦 DigitalEuro: Make reservation
-   📄 SmartContract->>👨‍🦲 Buyer: Receives Stablecoin
-   🏦 DigitalEuro->>👩‍🦰 Seller: Receives funds
+   👩‍🦰 Seller->>📄 SmartContract: Lock stablecoin
+   👨‍🦲 Buyer->>🏦 DigitalEuro: Make reservation 
+   📄 SmartContract->>👨‍🦲 Buyer: Receive stablecoin
+   🏦 DigitalEuro->>👩‍🦰 Seller: Receive digital euros
 ```
 
 
 
-### File storage
+### File Storage
 
 ```sh
 docker pull akave/akavelink:latest
 docker run -d \
   -p 8000:3000 \
-  -e NODE_ADDRESS="connect.akave.ai:5500" \ 
+  -e NODE_ADDRESS="connect.akave.ai:5500" \
   -e PRIVATE_KEY="your_private_key" \
   akave/akavelink:latest
 ```

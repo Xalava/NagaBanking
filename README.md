@@ -1,14 +1,15 @@
 # Naga Banking - Banking Software for Modern Banks 
 
-Naga Banking is a suite facilitating bank operations when interacting with tokenized assets.
+Naga Banking is a software suite facilitating bank operations with tokenized assets, digital currencies, and traditional banking systems.
 
-Naga suports several scenarios:
-- Exchange of money received via SWIFT against a stablecoin
-- Atomic exchange digital euro vs Stablecoin, leveraging conditional payment capabilities
-- Payment wallet for digital Euro and stablecoins
+## Core Capabilities
+
+- **SWIFT-Stablecoin Exchange**: Exchange of money via SWIFT against stablecoins.
+- **Digital Euro-Stablecoin Atomic Exchange**: leveraging conditional payments and programmability
+- **Multi-Asset Wallet**: Unified interface for digital euros, stablecoins, and traditional forms of money
 
 
-*Example Scenario*
+### Example Scenario
 
 Alice, a seller of a stablecoin, uses the interface to formulate an offer. Bob, the buyer, can check the offers, including the KYC information when available.
 
@@ -34,48 +35,45 @@ sequenceDiagram
 
 ## System Architecture
 
-1. **NagaBank Server**
-   - Processes SWIFT messages, verifying payment details
-   - Screen buyer addresses
-   - Triggers smart contract unlocks (or minting)
+### 1. Banking Server (`/server`)
+   - Process SWIFT messages. Validate payment details.
+   - Compliance Engine: address screening.
+   - Triggers smart contract operations.
+   - DESP Integration.
 
-2. **Smart Contracts**
-   - NagaExchange
+### 2. Smart Contracts (`/contracts`)
+   - NagaExchange: Decentralized marketplace for tokenized asset trades: 
       - Manages USDC offers and escrow
       - Handles locking/unlocking of funds
       - Controls offer lifecycle
-   - Tokenized Deposit Smart Contract
-      - Contains current account for each user registered at the bank
+   - Stablecoin and tokenized deposits: ERC-20 compatible digital currencies
 
-3. **Web Interface**
-   - Offer creation interface
-   - Offers viewing
-   - Bank dashboard
 
+### 3. Web Interface (`/frontend`)
+   - Trading Dashboard: Create and answer to asset offers
+   - Bank dashboard: visibility on ongoing accounts and transactions
+   
 
 ## Technical Stack
 
-### Smart Contracts
-- Dev Framework: Hardhat
-- Language: Solidity 0.8.26
-- KYC information: Kinto KYC viewer
-- MPC for privacy of IBANs
+### Blockchain Layer
+- **Dev Tool**: Hardhat 
+- **Language**: Solidity 0.8.26
+- **Privacy**: MPC/FHEVM for sensitive data
 
-### Bank Server
-- Runtime: Node.js
-- Transaction screening: Circle Compliance Engine
-<!-- - Storage: Ayake -->
 
-### Frontend
-- Framework: Vanilla JavaScript
-- CSS Framework: Milligram.io
-- Web3 Library: ethers.js
+### Backend Services
+- **Runtime**: Node.js with Koa.js 
+- **Compliance**: Circle Compliance Engine 
 
+### Frontend & Integration
+- **UI**: Vanilla JavaScript
+- **Web3**: ethers.js
+- **Styling**: Milligram.io 
 
 ## Usage
 
-### Launching
-
+### Launching 
 The short version:
 
 ```sh
@@ -88,15 +86,19 @@ The long version:
 ## Install main node modules and server modules
 npm i && cd server && npm i
 npm i nodemon -g
+
 ## First terminal a hardhat node
 npx hardhat node
+
 ## Second terminal, reset hardhat and compile. 
 npx hardhat clean && npx hardhat compile
-npx hardhat ignition deploy ignition/modules/naga.js --network localhost --reset # or npm run deploy
+npm run deploy # npx hardhat ignition deploy ignition/modules/naga.js --network localhost --reset 
 
 ## Third terminal, serve the server
-cd server && node index.js mockoffers && nodemon index.js serve ## or npm run serve
+npm run serve # cd server && node index.js mockoffers && nodemon index.js serve 
+
 ```
+Frontend should be at http://localhost:3000
 
 [additonal documentation](Documentation.md)
 
