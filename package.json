@@ -1,12 +1,15 @@
 {
   "name": "nagabanking",
   "version": "1.0.0",
-  "description": "Naga Banking is a suite facilitating bank operations when interacting with tokenized assets.",
+  "description": "Naga Banking is a suite facilitating bank operations when interacting with tokenized assets and digital currencies.",
   "main": "hardhat.config.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run test:contracts && npm run test:server",
     "deploy": "npx hardhat ignition deploy ignition/modules/naga.js --network localhost --reset",
-    "serve": "cd server && node index.js mockoffers && nodemon index.js"
+    "serve": "cd server && npm start",
+    "test:contracts": "npx hardhat test",
+    "test:server": "cd server && npm test",
+    "start": "echo \"Run in three terminals: \n npx hardhat node\n npm run deploy\n npm run serve\"&& exit 1"
   },
   "author": "",
   "license": "ISC",
