@@ -52,6 +52,16 @@ export function init() {
     )
 }
 
+export function cleanup() {
+    // Close any persistent connections to allow Node.js to exit
+    if (api && api.defaults && api.defaults.httpsAgent) {
+        api.defaults.httpsAgent.destroy()
+    }
+    if (api && api.defaults && api.defaults.httpAgent) {
+        api.defaults.httpAgent.destroy()
+    }
+}
+
 
 export function getInfo() {
     return api.get('info')
@@ -243,8 +253,7 @@ export async function createReservation(from, to, amount) {
     console.log(chalk.blue.bold(`Creating new reservation`))
     console.log(`  ${amount}€ ${from} → ${to}`)
     console.log(chalk.gray(`  Reservation id: ${rsvID}`))
-    const r1 = await api.post("reservations/" + rsvID, requestData)
-    // console.log(r1)
+    await api.post("reservations/" + rsvID, requestData)
 
     const r2 = await api.get("reservations/" + rsvID)
     // console.log(r2)
@@ -257,30 +266,45 @@ export async function createReservation(from, to, amount) {
 }
 
 export async function createPayment(from, to, amount) {
-    const paymentID = generateUUID()
-    console.log(chalk.blue.bold(`Creating payment`))
+    console.log(chalk.blue.bold(`Creating payment via reservation`))
     console.log(`  ${amount}€ ${from} → ${to}`)
-    console.log(chalk.gray(`  Payment id: ${paymentID}`))
 
-    const paymentRequestData = {
-        debtorEntry: holdings[from].id,
-        creditorEntry: holdings[to].id,
-        amount: {
-            amount: amount,
-            currency: 'EUR'
-        },
-        reserveRemaining: false // we don't keep the reservation
+    const holdings = await getHoldings()
+    if (!holdings) {
+        console.error("Could not get holdings!")
+        return null
     }
-    const payment = await api.post("payments/" + paymentID, paymentRequestData)
-    console.log(payment)
-    const paymentDetails = await api.get("payments/" + paymentID)
-    // console.log(paymentDetails)
-    if (paymentDetails.paymentStatus === "ACCC") {
-        console.log(chalk.green("  ✔️  Payment accepted"))
-        return paymentID
-    } else {
-        console.log(chalk.red("Payment not executed"))
+
+    const fromId = Object.keys(holdings).find(k => holdings[k].name === from) || from
+    const toId = Object.keys(holdings).find(k => holdings[k].name === to) || to
+
+
+    const rsvID = await createReservation(fromId, toId, amount)
+    if (!rsvID) {
+        return null
     }
+
+    const paymentID = await createPaymentFromReservation(rsvID, amount)
+    return paymentID
+    // const paymentRequestData = {
+    //     debtorEntry: fromId,
+    //     creditorEntry: toId,
+    //     amount: {
+    //         amount: amount,
+    //         currency: 'EUR'
+    //     }
+    // }
+
+    // const payment = await api.post("payments", paymentRequestData)
+    // console.log(payment)
+    // const paymentDetails = await api.get("payments/" + paymentID)
+    // // console.log(paymentDetails)
+    // if (paymentDetails.paymentStatus === "ACCC") {
+    //     console.log(chalk.green("  ✔️  Payment accepted"))
+    //     return paymentID
+    // } else {
+    //     console.log(chalk.red("Payment not executed"))
+    // }
 
 }
 

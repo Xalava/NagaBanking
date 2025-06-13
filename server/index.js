@@ -61,8 +61,8 @@ export function serve() {
         try {
             const { fromName, toName, amount } = ctx.request.body;
 
-            await desp.createPayment(fromName, toName, amount)
-            ctx.body = 'Payment created'
+            const paymentId = await desp.createPayment(fromName, toName, amount)
+            ctx.body = paymentId
 
         } catch (err) {
             console.error('Payment error:', err);
@@ -112,7 +112,26 @@ export function serve() {
         }
     })
     app.use(router.routes()).use(router.allowedMethods())
-    app.listen(3000, () => console.log(chalk.green('Server started on port 3000')))
+    const server = app.listen(3000, () => console.log(chalk.green('Server started on port 3000')))
+    
+    // Handle shutdown gracefully
+    process.on('SIGTERM', () => {
+        console.log(chalk.yellow('Received SIGTERM, shutting down gracefully'))
+        desp.cleanup()
+        server.close(() => {
+            console.log(chalk.yellow('Server closed'))
+            process.exit(0)
+        })
+    })
+    
+    process.on('SIGINT', () => {
+        console.log(chalk.yellow('Received SIGINT, shutting down gracefully'))
+        desp.cleanup()
+        server.close(() => {
+            console.log(chalk.yellow('Server closed'))
+            process.exit(0)
+        })
+    })
 }
 
 // constants

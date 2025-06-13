@@ -19,7 +19,13 @@ describe('Naga Banking Server API Tests', function () {
 
     after(function () {
         if (serverProcess) {
-            serverProcess.kill()
+            serverProcess.kill('SIGTERM')
+            // Force kill if it doesn't respond to SIGTERM
+            setTimeout(() => {
+                if (!serverProcess.killed) {
+                    serverProcess.kill('SIGKILL')
+                }
+            }, 1000)
         }
     })
 
@@ -62,7 +68,7 @@ describe('Naga Banking Server API Tests', function () {
         it('should handle DESP payment', async function () {
             const paymentData = {
                 fromName: 'Alice',
-                toName: 'Bob',
+                toName: 'Charles',
                 amount: 1
             }
 
@@ -74,7 +80,11 @@ describe('Naga Banking Server API Tests', function () {
                 body: JSON.stringify(paymentData)
             })
 
-            assert.strictEqual(response.status, 200)
+            if (response.status !== 200) {
+                const serverResponse = await response.text()
+                console.error(`Server responded with ${response.status}: ${serverResponse}`)
+                assert.fail(`${serverResponse}`)
+            }
             const result = await response.text()
             assert.ok(result.length === 36, 'Result is not a valid UUID')
         })
@@ -100,7 +110,7 @@ describe('Naga Banking Server API Tests', function () {
             }
         })
 
-        it('should handle mock offers (may fail if blockchain unavailable)', async function () {
+        it('should handle mock offers', async function () {
             const response = await fetch(`${BASE_URL}/mockoffers`)
 
             const result = await response.text()
