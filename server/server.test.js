@@ -112,8 +112,8 @@ describe('Naga Banking Server API Tests', function () {
 
         it('should handle mock offers', async function () {
             const response = await fetch(`${BASE_URL}/mockoffers`)
-
             const result = await response.text()
+            assert.strictEqual(response.status, 200)
             assert.strictEqual(result, 'Mock offers created')
         })
     })

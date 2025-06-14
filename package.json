@@ -6,6 +6,7 @@
   "scripts": {
     "test": "npm run test:contracts && npm run test:server",
     "deploy": "npx hardhat ignition deploy ignition/modules/naga.js --network localhost --reset",
+    "deploy:full": "npx hardhat ignition deploy ignition/modules/naga.js --network localhost --reset --parameters '{\"conditionalPayments\": true}'",
     "serve": "cd server && npm start",
     "test:contracts": "npx hardhat test",
     "test:server": "cd server && npm test",
